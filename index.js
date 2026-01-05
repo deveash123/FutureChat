@@ -5,21 +5,16 @@ const server = http.createServer(app);
 const { Server } = require("socket.io");
 const mongoose = require('mongoose');
 
-// --- DATABASE CONNECTION ---
-// Your Password 'deveash1234' is included
 const connectionString = "mongodb+srv://gdeveash:deveash1234@cluster0.5ypsc7q.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 
 mongoose.connect(connectionString)
   .then(() => console.log('✅ NEXUS OS Online'))
   .catch((err) => console.error('❌ DB Error:', err));
 
-// --- SCHEMAS ---
 const userSchema = new mongoose.Schema({
-    username: String,
-    avatar: String,
+    username: String, avatar: String, bio: String,
     followers: { type: Number, default: 0 },
-    profileViews: { type: Number, default: 0 },
-    bio: { type: String, default: "Digital Nomad" }
+    views: { type: Number, default: 0 }
 });
 const User = mongoose.model('User', userSchema);
 
@@ -32,7 +27,7 @@ const Msg = mongoose.model('Msg', msgSchema);
 const postSchema = new mongoose.Schema({
     user: String, type: String, content: String, caption: String,
     avatar: String, likes: [String],
-    comments: [{ user: String, text: String, avatar: String, timestamp: Date }],
+    comments: [{ user: String, text: String, timestamp: Date }],
     timestamp: { type: Date, default: Date.now }
 });
 const Post = mongoose.model('Post', postSchema);
@@ -44,25 +39,30 @@ app.get('/', (req, res) => { res.sendFile(__dirname + '/index.html'); });
 
 io.on('connection', (socket) => {
     
-    // INITIALIZE USER
+    // LOGIN
     socket.on('login', async (username) => {
         let user = await User.findOne({ username });
         if (!user) {
             user = new User({ 
                 username, 
-                avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${username}` 
+                avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${username}`,
+                bio: "Digital Nomad"
             });
             await user.save();
         }
         socket.emit('user data', user);
         
-        // Load Feed
+        // Load Feed & Users
         const posts = await Post.find().sort({ timestamp: -1 }).limit(20);
         socket.emit('load feed', posts);
-        
-        // Load Users (for Followers tab)
         const users = await User.find().limit(10);
         socket.emit('load users', users);
+    });
+
+    // UPDATE PROFILE
+    socket.on('update profile', async (data) => {
+        await User.findOneAndUpdate({ username: data.username }, { bio: data.bio });
+        socket.emit('profile updated', data.bio);
     });
 
     // CHAT
@@ -81,24 +81,6 @@ io.on('connection', (socket) => {
     socket.on('create post', (data) => {
         const newPost = new Post({ ...data, likes: [], comments: [] });
         newPost.save().then(saved => io.emit('new post', saved));
-    });
-
-    socket.on('like post', async ({ id, user }) => {
-        const post = await Post.findById(id);
-        if (post) {
-            post.likes.includes(user) ? post.likes.pull(user) : post.likes.push(user);
-            await post.save();
-            io.emit('update post', post);
-        }
-    });
-
-    socket.on('comment post', async ({ id, user, text, avatar }) => {
-        const post = await Post.findById(id);
-        if (post) {
-            post.comments.push({ user, text, avatar, timestamp: new Date() });
-            await post.save();
-            io.emit('update post', post);
-        }
     });
 });
 
