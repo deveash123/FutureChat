@@ -3,26 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FutureChat Premium</title>
+    <title>FutureChat v2</title>
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&display=swap" rel="stylesheet">
 
     <style>
-        /* --- CORE VISUALS --- */
         :root {
-            --primary-gradient: linear-gradient(135deg, #00C6FF, #0072FF);
-            --glass-bg: rgba(255, 255, 255, 0.05);
-            --glass-border: 1px solid rgba(255, 255, 255, 0.1);
-            --gloss-highlight: rgba(255, 255, 255, 0.15);
+            --primary: #00C6FF;
+            --accent: #0072FF;
+            --glass: rgba(255, 255, 255, 0.05);
+            --border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         body {
             margin: 0;
             background: #050505;
-            /* Deep Space Background */
-            background-image: 
-                radial-gradient(circle at 10% 20%, rgba(0, 114, 255, 0.2) 0%, transparent 40%),
-                radial-gradient(circle at 90% 80%, rgba(255, 0, 212, 0.15) 0%, transparent 40%);
+            background-image: radial-gradient(circle at 50% 50%, rgba(0, 114, 255, 0.15) 0%, transparent 50%);
             font-family: 'Outfit', sans-serif;
             color: white;
             height: 100vh;
@@ -31,50 +27,74 @@
             overflow: hidden;
         }
 
-        /* --- HEADER (Glass Bar) --- */
+        /* --- LOGIN SCREEN (OVERLAY) --- */
+        #login-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9);
+            backdrop-filter: blur(20px);
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: 0.5s;
+        }
+
+        .login-box {
+            background: var(--glass);
+            padding: 40px;
+            border-radius: 20px;
+            border: var(--border);
+            text-align: center;
+            box-shadow: 0 0 50px rgba(0, 114, 255, 0.2);
+        }
+
+        .login-box h2 { margin-bottom: 20px; letter-spacing: 2px; }
+
+        #username-input {
+            padding: 15px;
+            border-radius: 30px;
+            border: none;
+            outline: none;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            text-align: center;
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            width: 200px;
+        }
+
+        .btn-enter {
+            padding: 10px 40px;
+            border-radius: 30px;
+            border: none;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: 0.3s;
+        }
+
+        .btn-enter:hover { box-shadow: 0 0 20px var(--primary); transform: scale(1.05); }
+
+        /* --- HEADER --- */
         header {
             padding: 15px 20px;
-            background: rgba(20, 20, 20, 0.6);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-bottom: var(--glass-border);
+            background: rgba(20, 20, 20, 0.8);
+            border-bottom: var(--border);
             display: flex;
-            align-items: center;
             justify-content: space-between;
-            z-index: 100;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-
-        .brand {
-            display: flex;
             align-items: center;
-            gap: 10px;
+            z-index: 100;
         }
+        
+        .brand { font-weight: 700; font-size: 1.2rem; display: flex; align-items: center; gap: 10px; }
+        .brand i { color: var(--primary); }
+        .user-badge { font-size: 0.9rem; color: #888; }
 
-        .brand i {
-            font-size: 1.5rem;
-            background: var(--primary-gradient);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        h1 {
-            margin: 0;
-            font-size: 1.2rem;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-        }
-
-        .status-dot {
-            height: 10px;
-            width: 10px;
-            background-color: #00ff88;
-            border-radius: 50%;
-            box-shadow: 0 0 10px #00ff88;
-            animation: pulse 2s infinite;
-        }
-
-        /* --- CHAT AREA (Smooth Scroll) --- */
+        /* --- CHAT AREA --- */
         #messages {
             list-style: none;
             padding: 20px;
@@ -83,170 +103,157 @@
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            gap: 10px;
             scroll-behavior: smooth;
         }
 
-        /* Custom Scrollbar */
-        #messages::-webkit-scrollbar { width: 5px; }
-        #messages::-webkit-scrollbar-track { background: transparent; }
-        #messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+        #messages::-webkit-scrollbar { width: 4px; }
+        #messages::-webkit-scrollbar-thumb { background: #333; border-radius: 10px; }
 
-        /* --- MESSAGE BUBBLES (Glossy) --- */
         li {
-            padding: 12px 18px;
-            border-radius: 18px;
-            border-top-left-radius: 2px; /* Makes it look like a chat bubble */
-            max-width: 75%;
-            font-weight: 300;
-            line-height: 1.5;
-            position: relative;
-            animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Fluid bounce */
-            
-            /* The Glass Effect */
-            background: var(--glass-bg);
-            backdrop-filter: blur(10px);
-            border: var(--glass-border);
-            border-top: 1px solid var(--gloss-highlight); /* Shiny top edge */
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            padding: 10px 15px;
+            border-radius: 15px;
+            max-width: 80%;
+            font-size: 0.95rem;
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            line-height: 1.4;
+            display: flex;
+            flex-direction: column;
         }
 
-        /* Simulating "My" messages vs "Others" for style */
-        li:nth-child(even) {
+        .msg-name {
+            font-size: 0.7rem;
+            color: var(--primary);
+            margin-bottom: 3px;
+            font-weight: bold;
+        }
+
+        /* My Messages (Right) */
+        .my-message {
             align-self: flex-end;
-            border-top-left-radius: 18px;
-            border-bottom-right-radius: 2px;
             background: linear-gradient(135deg, rgba(0, 198, 255, 0.2), rgba(0, 114, 255, 0.2));
-            border-color: rgba(0, 198, 255, 0.3);
+            border: 1px solid rgba(0, 198, 255, 0.3);
+            border-bottom-right-radius: 2px;
         }
 
-        /* --- INPUT AREA (Floating Pill) --- */
-        form {
-            padding: 20px;
-            background: transparent;
-            display: flex;
-            gap: 12px;
-            align-items: center;
-        }
-
-        .input-group {
-            flex-grow: 1;
+        /* Others Messages (Left) */
+        .other-message {
+            align-self: flex-start;
             background: rgba(255, 255, 255, 0.08);
-            border: var(--glass-border);
-            border-radius: 30px;
-            padding: 5px 20px;
-            display: flex;
-            align-items: center;
-            backdrop-filter: blur(10px);
-            transition: 0.3s;
+            border: var(--border);
+            border-top-left-radius: 2px;
         }
 
-        .input-group:focus-within {
-            background: rgba(255, 255, 255, 0.15);
-            border-color: rgba(255, 255, 255, 0.3);
-            box-shadow: 0 0 20px rgba(0, 198, 255, 0.1);
+        .other-message .msg-name { color: #ff00de; }
+
+        /* --- INPUT --- */
+        form {
+            padding: 15px;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            gap: 10px;
         }
 
         input {
-            width: 100%;
-            background: transparent;
+            flex-grow: 1;
+            background: rgba(255,255,255,0.1);
             border: none;
+            padding: 12px 20px;
+            border-radius: 30px;
             color: white;
-            font-family: 'Outfit', sans-serif;
-            font-size: 1rem;
-            padding: 10px 0;
             outline: none;
         }
 
-        /* --- GLOSSY SEND BUTTON --- */
         button {
-            height: 50px;
-            width: 50px;
+            width: 45px; height: 45px;
             border-radius: 50%;
             border: none;
-            background: var(--primary-gradient);
-            color: white;
+            background: var(--primary);
+            color: black;
             font-size: 1.2rem;
             cursor: pointer;
-            box-shadow: 0 5px 15px rgba(0, 114, 255, 0.4);
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            display: flex;
-            align-items: center;
-            justify-content: center;
         }
 
-        button:hover {
-            transform: scale(1.1) rotate(-10deg);
-            box-shadow: 0 8px 25px rgba(0, 114, 255, 0.6);
-        }
-
-        button:active {
-            transform: scale(0.9);
-        }
-
-        /* --- ANIMATIONS --- */
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(30px) scale(0.9); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-
-        @keyframes pulse {
-            0% { opacity: 1; box-shadow: 0 0 0 0 rgba(0, 255, 136, 0.7); }
-            70% { opacity: 0.7; box-shadow: 0 0 0 10px rgba(0, 255, 136, 0); }
-            100% { opacity: 1; box-shadow: 0 0 0 0 rgba(0, 255, 136, 0); }
-        }
+        @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
     </style>
 </head>
 <body>
 
-    <header>
-        <div class="brand">
-            <i class="ri-bubble-chart-fill"></i>
-            <h1>FutureChat</h1>
+    <div id="login-screen">
+        <div class="login-box">
+            <h2>IDENTIFY</h2>
+            <input type="text" id="username-input" placeholder="Enter Name..." autocomplete="off">
+            <button class="btn-enter" onclick="joinChat()">ACCESS</button>
         </div>
-        <div class="status-dot"></div>
+    </div>
+
+    <header>
+        <div class="brand"><i class="ri-rfid-fill"></i> FutureChat</div>
+        <div class="user-badge" id="display-name">Anonymous</div>
     </header>
 
-    <ul id="messages">
-        </ul>
+    <ul id="messages"></ul>
 
     <form id="form" action="">
-        <div class="input-group">
-            <input id="input" autocomplete="off" placeholder="Type your message..." />
-        </div>
+        <input id="input" autocomplete="off" placeholder="Type message..." />
         <button><i class="ri-send-plane-fill"></i></button>
     </form>
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
         var socket = io();
+        var myName = "";
 
+        // 1. Handle Login
+        function joinChat() {
+            var nameInput = document.getElementById("username-input");
+            if (nameInput.value.trim() !== "") {
+                myName = nameInput.value;
+                document.getElementById("login-screen").style.opacity = "0";
+                setTimeout(() => {
+                    document.getElementById("login-screen").style.display = "none";
+                }, 500);
+                document.getElementById("display-name").innerText = "User: " + myName;
+            }
+        }
+
+        // 2. Sending Messages (Now with JSON)
         var form = document.getElementById('form');
         var input = document.getElementById('input');
         var messages = document.getElementById('messages');
 
-        // Sounds (Optional: Remove if annoying)
-        // const sendSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3');
-
         form.addEventListener('submit', function(e) {
             e.preventDefault();
-            if (input.value) {
-                socket.emit('chat message', input.value);
+            if (input.value && myName) {
+                // Send an object: { user: "Harish", text: "Hello" }
+                var msgData = { user: myName, text: input.value };
+                socket.emit('chat message', JSON.stringify(msgData));
                 input.value = '';
-                input.focus();
             }
         });
 
+        // 3. Receiving Messages
         socket.on('chat message', function(msg) {
+            // Try to parse JSON, if fails, it's old text format
+            var data;
+            try {
+                data = JSON.parse(msg);
+            } catch(e) {
+                data = { user: "Unknown", text: msg };
+            }
+
             var item = document.createElement('li');
-            item.textContent = msg;
+            
+            // Check if it's ME or OTHERS
+            if (data.user === myName) {
+                item.classList.add("my-message");
+            } else {
+                item.classList.add("other-message");
+            }
+
+            item.innerHTML = `<div class="msg-name">${data.user}</div> ${data.text}`;
             messages.appendChild(item);
-            
-            // Auto Smooth Scroll to bottom
             messages.scrollTop = messages.scrollHeight;
-            
-            // Optional: Play sound
-            // sendSound.play();
         });
     </script>
 </body>
