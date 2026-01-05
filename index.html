@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FutureChat v5 (Photos)</title>
+    <title>FutureChat v6 (Fast Photos)</title>
     
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#000000">
@@ -26,7 +26,6 @@
             background-image: radial-gradient(circle at 50% 50%, rgba(0, 114, 255, 0.15) 0%, transparent 50%);
             font-family: 'Outfit', sans-serif;
             color: white;
-            height: 100vh;
             height: 100dvh; 
             display: flex;
             flex-direction: column;
@@ -44,7 +43,6 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            transition: 0.5s;
         }
 
         .login-box {
@@ -131,6 +129,7 @@
             border-radius: 10px;
             margin-top: 5px;
             border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
         }
 
         .my-message {
@@ -176,7 +175,6 @@
             font-size: 1rem;
         }
 
-        /* Button Styling */
         .btn-icon {
             width: 48px; height: 48px;
             border-radius: 50%;
@@ -188,7 +186,6 @@
             align-items: center;
             justify-content: center;
         }
-
         .btn-send { background: var(--primary); }
         .btn-camera { background: #333; color: white; border: 1px solid #555; }
 
@@ -218,9 +215,7 @@
         <button type="button" class="btn-icon btn-camera" onclick="document.getElementById('fileInput').click()">
             <i class="ri-image-add-line"></i>
         </button>
-
         <input id="input" autocomplete="off" placeholder="Type..." />
-        
         <button class="btn-icon btn-send"><i class="ri-send-plane-fill"></i></button>
     </form>
 
@@ -229,9 +224,7 @@
         var socket = io();
         var myName = localStorage.getItem("chatName") || "";
 
-        if (myName) {
-            closeLogin();
-        }
+        if (myName) closeLogin();
 
         function joinChat() {
             var nameInput = document.getElementById("username-input");
@@ -244,9 +237,7 @@
 
         function closeLogin() {
             document.getElementById("login-screen").style.opacity = "0";
-            setTimeout(() => {
-                document.getElementById("login-screen").style.display = "none";
-            }, 500);
+            setTimeout(() => { document.getElementById("login-screen").style.display = "none"; }, 500);
             document.getElementById("display-name").innerText = myName;
         }
 
@@ -255,7 +246,7 @@
         var fileInput = document.getElementById('fileInput');
         var messages = document.getElementById('messages');
 
-        // 1. Handle Text Submit
+        // Handle Text
         form.addEventListener('submit', function(e) {
             e.preventDefault();
             if (input.value && myName) {
@@ -266,40 +257,53 @@
             }
         });
 
-        // 2. Handle Image Selection
+        // --- NEW: COMPRESS IMAGE BEFORE SENDING ---
         fileInput.addEventListener('change', function() {
             const file = this.files[0];
             if (file && myName) {
                 const reader = new FileReader();
-                reader.onload = function(evt) {
-                    const imgData = evt.target.result; // This is the image as a text string
-                    var msgData = { user: myName, type: 'image', content: imgData };
-                    socket.emit('chat message', JSON.stringify(msgData));
+                reader.onload = function(event) {
+                    const img = new Image();
+                    img.onload = function() {
+                        // Create a "virtual" canvas to resize the image
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        
+                        // Set max size to 800px (Good balance of quality vs speed)
+                        const MAX_WIDTH = 800;
+                        const scaleFactor = MAX_WIDTH / img.width;
+                        
+                        canvas.width = MAX_WIDTH;
+                        canvas.height = img.height * scaleFactor;
+                        
+                        // Draw resized image
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        
+                        // Compress to JPEG (0.7 quality)
+                        const compressedData = canvas.toDataURL('image/jpeg', 0.7);
+                        
+                        // Send!
+                        var msgData = { user: myName, type: 'image', content: compressedData };
+                        socket.emit('chat message', JSON.stringify(msgData));
+                    }
+                    img.src = event.target.result;
                 };
-                reader.readAsDataURL(file); // Convert image to string
-                this.value = ''; // Reset input
+                reader.readAsDataURL(file);
+                this.value = ''; 
             }
         });
 
-        // 3. Receive Messages (Text or Image)
+        // Receive Messages
         socket.on('chat message', function(msg) {
             var data;
             try { data = JSON.parse(msg); } catch(e) { data = { user: "Anon", type: 'text', content: msg }; }
 
             var item = document.createElement('li');
-            if (data.user === myName) {
-                item.classList.add("my-message");
-            } else {
-                item.classList.add("other-message");
-            }
+            item.classList.add(data.user === myName ? "my-message" : "other-message");
 
-            // Decide what to show based on TYPE
-            let contentHtml = "";
-            if (data.type === 'image') {
-                contentHtml = `<img src="${data.content}" class="chat-image" />`;
-            } else {
-                contentHtml = data.content; // Normal text
-            }
+            let contentHtml = data.type === 'image' 
+                ? `<img src="${data.content}" class="chat-image" />` 
+                : data.content;
 
             item.innerHTML = `<div class="msg-name">${data.user}</div> ${contentHtml}`;
             messages.appendChild(item);
