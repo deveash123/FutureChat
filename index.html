@@ -3,76 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Chat Minimal</title>
+    <title>Chat Adaptive</title>
     
     <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#ffffff">
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+    <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+    
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/724/724715.png">
 
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 
     <style>
+        /* --- 1. DEFAULT THEME (LIGHT MODE) --- */
         :root {
-            --primary: #007AFF; /* Apple Blue */
+            --primary: #007AFF; 
             --bg: #F2F2F7;
-            --white: #FFFFFF;
+            --header-bg: rgba(255, 255, 255, 0.85);
+            --header-border: rgba(0,0,0,0.05);
+            --text-main: #000000;
+            --text-secondary: #8E8E93;
+            
             --bubble-self: #007AFF;
-            --bubble-other: #E9E9EB;
             --text-self: #FFFFFF;
+            
+            --bubble-other: #E9E9EB;
             --text-other: #000000;
-            --gray: #8E8E93;
+            
+            --input-bar-bg: #FFFFFF;
+            --input-field-bg: #F2F2F7;
+            --icon-color: #007AFF;
+        }
+
+        /* --- 2. DARK MODE OVERRIDE (System Automatic) --- */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg: #000000;
+                --header-bg: rgba(20, 20, 20, 0.85);
+                --header-border: rgba(255,255,255,0.1);
+                --text-main: #FFFFFF;
+                --text-secondary: #8E8E93;
+                
+                --bubble-self: #0A84FF; /* Slightly lighter blue for dark mode */
+                --text-self: #FFFFFF;
+                
+                --bubble-other: #1C1C1E; /* Dark Gray */
+                --text-other: #FFFFFF;
+                
+                --input-bar-bg: #000000;
+                --input-field-bg: #1C1C1E;
+                --icon-color: #0A84FF;
+            }
         }
 
         body {
             margin: 0;
             background: var(--bg);
+            color: var(--text-main);
             font-family: 'Inter', sans-serif;
             height: 100dvh;
             display: flex;
             flex-direction: column;
             overflow: hidden;
             -webkit-font-smoothing: antialiased;
+            transition: background 0.3s, color 0.3s; /* Smooth transition when switching */
         }
 
-        /* --- 1. CLEAN HEADER --- */
+        /* --- HEADER --- */
         header {
-            background: rgba(255, 255, 255, 0.85);
+            background: var(--header-bg);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             padding: 15px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-bottom: 1px solid rgba(0,0,0,0.05);
+            border-bottom: 1px solid var(--header-border);
             z-index: 100;
             position: sticky;
             top: 0;
         }
 
-        .brand {
-            font-weight: 600;
-            font-size: 1.1rem;
-            color: #000;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
+        .brand { font-weight: 600; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
         .user-pill {
             font-size: 0.8rem;
-            color: var(--gray);
+            color: var(--text-secondary);
             font-weight: 500;
-            background: rgba(0,0,0,0.05);
+            background: var(--input-field-bg);
             padding: 4px 12px;
             border-radius: 20px;
         }
 
-        /* --- 2. CHAT AREA --- */
+        /* --- CHAT AREA --- */
         #messages {
             list-style: none;
             padding: 20px;
-            padding-bottom: 120px; /* Space for input */
+            padding-bottom: 120px;
             margin: 0;
             flex-grow: 1;
             overflow-y: auto;
@@ -81,7 +107,6 @@
             gap: 8px;
         }
 
-        /* Message Bubbles */
         li {
             padding: 10px 16px;
             border-radius: 18px;
@@ -90,58 +115,40 @@
             line-height: 1.4;
             position: relative;
             word-wrap: break-word;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
             animation: fadeIn 0.2s ease;
         }
 
-        .msg-name {
-            font-size: 0.7rem;
-            margin-bottom: 4px;
-            font-weight: 600;
-            opacity: 0.7;
-        }
+        .msg-name { font-size: 0.7rem; margin-bottom: 4px; font-weight: 600; opacity: 0.7; }
 
-        /* My Messages (Right) */
         .my-message {
             align-self: flex-end;
             background: var(--bubble-self);
             color: var(--text-self);
             border-bottom-right-radius: 4px;
         }
-        .my-message .msg-name { display: none; } /* Hide my name for clean look */
+        .my-message .msg-name { display: none; }
 
-        /* Others Messages (Left) */
         .other-message {
             align-self: flex-start;
             background: var(--bubble-other);
             color: var(--text-other);
             border-bottom-left-radius: 4px;
         }
-        .other-message .msg-name { color: var(--gray); }
+        .other-message .msg-name { color: var(--text-secondary); }
 
-        /* Media Styles */
-        .chat-image {
-            max-width: 100%;
-            border-radius: 12px;
-            margin-top: 5px;
-        }
-        
-        audio {
-            height: 30px;
-            margin-top: 5px;
-            max-width: 200px;
-        }
+        .chat-image { max-width: 100%; border-radius: 12px; margin-top: 5px; }
+        audio { height: 35px; margin-top: 5px; max-width: 220px; }
 
-        /* --- 3. INPUT BAR (Bottom) --- */
+        /* --- INPUT BAR --- */
         form {
             position: fixed;
             bottom: 0; left: 0; width: 100%;
-            background: var(--white);
+            background: var(--input-bar-bg);
+            border-top: 1px solid var(--header-border);
             padding: 10px 15px;
             display: flex;
             align-items: center;
             gap: 10px;
-            box-shadow: 0 -2px 20px rgba(0,0,0,0.05);
             padding-bottom: max(10px, env(safe-area-inset-bottom));
             box-sizing: border-box;
             z-index: 1000;
@@ -149,7 +156,7 @@
 
         .input-wrapper {
             flex-grow: 1;
-            background: #F2F2F7;
+            background: var(--input-field-bg);
             border-radius: 25px;
             padding: 8px 15px;
             display: flex;
@@ -162,24 +169,21 @@
             width: 100%;
             outline: none;
             font-size: 1rem;
+            color: var(--text-main); /* Adaptive Text Color */
             font-family: 'Inter', sans-serif;
         }
 
-        /* Buttons */
         .btn-icon {
             border: none;
             background: transparent;
-            color: var(--primary);
+            color: var(--icon-color);
             font-size: 1.4rem;
             cursor: pointer;
             padding: 5px;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: 0.2s;
         }
-
-        .btn-icon:active { transform: scale(0.9); }
         .recording { color: #FF3B30 !important; animation: pulse 1s infinite; }
 
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
@@ -188,7 +192,7 @@
         /* --- LOGIN OVERLAY --- */
         #login-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--white);
+            background: var(--input-bar-bg); /* Adapts to dark mode */
             z-index: 5000;
             display: flex;
             flex-direction: column;
@@ -197,13 +201,14 @@
         }
         .login-input {
             padding: 15px;
-            border: 1px solid #ddd;
+            border: 1px solid var(--header-border);
             border-radius: 12px;
             width: 250px;
             font-size: 1rem;
             margin-bottom: 20px;
             text-align: center;
-            background: #F9F9F9;
+            background: var(--input-field-bg);
+            color: var(--text-main);
         }
         .login-btn {
             background: var(--primary);
@@ -214,6 +219,7 @@
             font-weight: 600;
             font-size: 1rem;
         }
+        #login-screen h1 { color: var(--text-main); }
     </style>
 </head>
 <body>
@@ -237,15 +243,12 @@
         <button type="button" class="btn-icon" onclick="document.getElementById('fileInput').click()">
             <i class="ri-camera-line"></i>
         </button>
-
         <button type="button" class="btn-icon" id="micBtn">
             <i class="ri-mic-line"></i>
         </button>
-
         <div class="input-wrapper">
             <input id="input" autocomplete="off" placeholder="Message..." />
         </div>
-
         <button class="btn-icon"><i class="ri-send-plane-fill"></i></button>
     </form>
 
@@ -254,7 +257,6 @@
         var socket = io();
         var myName = localStorage.getItem("chatName") || "";
         
-        // --- LOGIN LOGIC ---
         if (myName) closeLogin();
 
         function joinChat() {
@@ -270,13 +272,12 @@
             document.getElementById("display-name").innerText = myName;
         }
 
-        // --- CHAT LOGIC ---
         var form = document.getElementById('form');
         var input = document.getElementById('input');
         var messages = document.getElementById('messages');
         var fileInput = document.getElementById('fileInput');
 
-        // 1. Send Text
+        // Text
         form.addEventListener('submit', function(e) {
             e.preventDefault();
             if (input.value && myName) {
@@ -287,7 +288,7 @@
             }
         });
 
-        // 2. Send Image (Compressed)
+        // Image
         fileInput.addEventListener('change', function() {
             const file = this.files[0];
             if (file && myName) {
@@ -314,7 +315,7 @@
             }
         });
 
-        // 3. Audio Recorder Logic
+        // Audio
         let mediaRecorder;
         let audioChunks = [];
         const micBtn = document.getElementById('micBtn');
@@ -322,36 +323,26 @@
 
         micBtn.addEventListener('click', async () => {
             if (!isRecording) {
-                // START RECORDING
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                     mediaRecorder = new MediaRecorder(stream);
                     mediaRecorder.start();
-                    
                     isRecording = true;
-                    micBtn.classList.add('recording'); // Turn red
+                    micBtn.classList.add('recording'); 
                     input.placeholder = "Recording audio...";
-                    
                     audioChunks = [];
-                    mediaRecorder.addEventListener("dataavailable", event => {
-                        audioChunks.push(event.data);
-                    });
-
+                    mediaRecorder.addEventListener("dataavailable", event => { audioChunks.push(event.data); });
                     mediaRecorder.addEventListener("stop", () => {
                         const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
                         const reader = new FileReader();
                         reader.readAsDataURL(audioBlob);
                         reader.onloadend = () => {
-                            const base64String = reader.result;
-                            var msgData = { user: myName, type: 'audio', content: base64String };
+                            var msgData = { user: myName, type: 'audio', content: reader.result };
                             socket.emit('chat message', JSON.stringify(msgData));
                         };
                     });
-                } catch (err) {
-                    alert("Microphone access denied or not supported.");
-                }
+                } catch (err) { alert("Microphone not supported."); }
             } else {
-                // STOP RECORDING
                 mediaRecorder.stop();
                 isRecording = false;
                 micBtn.classList.remove('recording');
@@ -359,29 +350,20 @@
             }
         });
 
-        // 4. Receive Messages
+        // Receive
         socket.on('chat message', function(msg) {
             var data;
             try { data = JSON.parse(msg); } catch(e) { return; }
-
             var item = document.createElement('li');
             item.classList.add(data.user === myName ? "my-message" : "other-message");
 
             let contentHtml = "";
-            if (data.type === 'image') {
-                contentHtml = `<img src="${data.content}" class="chat-image" />`;
-            } else if (data.type === 'audio') {
-                contentHtml = `<audio controls src="${data.content}"></audio>`;
-            } else {
-                contentHtml = data.content;
-            }
+            if (data.type === 'image') contentHtml = `<img src="${data.content}" class="chat-image" />`;
+            else if (data.type === 'audio') contentHtml = `<audio controls src="${data.content}"></audio>`;
+            else contentHtml = data.content;
 
-            // Only show name for others
-            if(data.user !== myName) {
-                item.innerHTML = `<div class="msg-name">${data.user}</div> ${contentHtml}`;
-            } else {
-                item.innerHTML = contentHtml;
-            }
+            if(data.user !== myName) item.innerHTML = `<div class="msg-name">${data.user}</div> ${contentHtml}`;
+            else item.innerHTML = contentHtml;
 
             messages.appendChild(item);
             window.scrollTo(0, document.body.scrollHeight);
