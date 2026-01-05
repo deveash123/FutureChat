@@ -14,149 +14,77 @@
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 
     <style>
-        /* --- FUTURE GLASS THEME --- */
         :root {
             --bg-gradient: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
             --glass: rgba(255, 255, 255, 0.05);
             --glass-border: 1px solid rgba(255, 255, 255, 0.1);
             --text-main: #ffffff;
-            --text-dim: rgba(255, 255, 255, 0.6);
-            --accent: #00d2ff; /* Neon Cyan */
+            --accent: #00d2ff;
             --bubble-self: rgba(0, 210, 255, 0.15);
             --bubble-other: rgba(255, 255, 255, 0.08);
         }
 
-        body {
-            margin: 0; background: var(--bg-gradient); color: var(--text-main);
-            font-family: 'Outfit', sans-serif; height: 100dvh; display: flex; overflow: hidden;
-        }
+        body { margin: 0; background: var(--bg-gradient); color: var(--text-main); font-family: 'Outfit', sans-serif; height: 100dvh; display: flex; overflow: hidden; }
 
-        /* --- LAYOUT: SIDEBAR + MAIN --- */
-        .app-container {
-            display: flex; width: 100%; height: 100%;
-        }
-
-        /* SIDEBAR (Contacts/Users) */
-        .sidebar {
-            width: 300px; background: rgba(0,0,0,0.3); backdrop-filter: blur(20px);
-            border-right: var(--glass-border); display: flex; flex-direction: column;
-            padding: 20px; transition: transform 0.3s ease;
-        }
-        .sidebar-header {
-            font-size: 1.4rem; font-weight: 600; margin-bottom: 20px; color: var(--accent);
-            display: flex; align-items: center; gap: 10px;
-        }
-        .user-list { list-style: none; padding: 0; margin: 0; overflow-y: auto; flex-grow: 1; }
-        .user-item {
-            display: flex; align-items: center; gap: 12px; padding: 12px;
-            background: var(--glass); border-radius: 12px; margin-bottom: 8px;
-            border: var(--glass-border);
-        }
-        .online-dot { width: 8px; height: 8px; background: #00ff88; border-radius: 50%; box-shadow: 0 0 10px #00ff88; }
+        .app-container { display: flex; width: 100%; height: 100%; }
         
-        /* MAIN CHAT AREA */
-        .chat-area {
-            flex-grow: 1; display: flex; flex-direction: column; position: relative;
-            background: radial-gradient(circle at 50% 50%, rgba(0, 210, 255, 0.05) 0%, transparent 70%);
-        }
-
-        /* HEADER */
-        .chat-header {
-            padding: 15px 20px; background: rgba(0,0,0,0.2); backdrop-filter: blur(10px);
-            border-bottom: var(--glass-border); display: flex; justify-content: space-between; align-items: center;
-        }
-        .room-title { font-size: 1.1rem; font-weight: 600; }
-        .typing-indicator { font-size: 0.8rem; color: var(--accent); height: 15px; margin-top: 4px; }
-
-        /* MESSAGES LIST */
-        #messages {
-            list-style: none; padding: 20px; flex-grow: 1; overflow-y: auto;
-            display: flex; flex-direction: column; gap: 10px;
-        }
-
-        /* MESSAGE BUBBLES */
-        li {
-            padding: 12px 16px; border-radius: 16px; max-width: 70%;
-            font-size: 0.95rem; line-height: 1.5; position: relative;
-            backdrop-filter: blur(5px); box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            animation: slideUp 0.3s ease;
-        }
+        /* SIDEBAR */
+        .sidebar { width: 300px; background: rgba(0,0,0,0.3); backdrop-filter: blur(20px); border-right: var(--glass-border); display: flex; flex-direction: column; padding: 20px; transition: transform 0.3s ease; }
+        .sidebar.active { left: 0; position: absolute; height: 100%; z-index: 200; background: #0f0c29; }
+        .user-list { list-style: none; padding: 0; margin: 0; overflow-y: auto; flex-grow: 1; }
+        .user-item { display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--glass); border-radius: 12px; margin-bottom: 8px; border: var(--glass-border); }
+        
+        /* CHAT AREA */
+        .chat-area { flex-grow: 1; display: flex; flex-direction: column; position: relative; background: radial-gradient(circle at 50% 50%, rgba(0, 210, 255, 0.05) 0%, transparent 70%); }
+        .chat-header { padding: 15px 20px; background: rgba(0,0,0,0.2); backdrop-filter: blur(10px); border-bottom: var(--glass-border); display: flex; justify-content: space-between; align-items: center; }
+        
+        /* MESSAGES */
+        #messages { list-style: none; padding: 20px; flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+        li { padding: 12px 16px; border-radius: 16px; max-width: 70%; font-size: 0.95rem; line-height: 1.5; position: relative; backdrop-filter: blur(5px); animation: slideUp 0.3s ease; }
         .my-message { align-self: flex-end; background: var(--bubble-self); border: 1px solid rgba(0, 210, 255, 0.3); border-bottom-right-radius: 2px; }
         .other-message { align-self: flex-start; background: var(--bubble-other); border: var(--glass-border); border-bottom-left-radius: 2px; }
         
-        .msg-meta { display: flex; justify-content: flex-end; font-size: 0.7rem; color: var(--text-dim); margin-top: 5px; gap: 5px; }
-        .sender-name { font-size: 0.75rem; font-weight: bold; color: var(--accent); margin-bottom: 4px; display: block; }
+        /* Actions (Delete/Reply) */
+        .msg-actions { display: none; position: absolute; top: -10px; right: 0; background: #222; padding: 4px; border-radius: 8px; gap: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+        li:hover .msg-actions { display: flex; }
+        .action-icon { cursor: pointer; color: #aaa; font-size: 1rem; padding: 2px 5px; }
+        .action-icon:hover { color: white; }
+        .delete-btn:hover { color: #ff4444; }
+
+        /* Reply Preview */
+        .reply-preview { background: rgba(0,0,0,0.3); border-left: 3px solid var(--accent); padding: 5px 10px; margin-bottom: 5px; border-radius: 4px; font-size: 0.8rem; color: #ccc; display: none; }
+        .reply-bar { background: rgba(0,0,0,0.5); padding: 10px; display: none; align-items: center; justify-content: space-between; border-top: var(--glass-border); }
 
         /* ATTACHMENTS */
-        .chat-image { max-width: 100%; border-radius: 8px; margin-top: 5px; border: var(--glass-border); }
-        .file-attachment {
-            display: flex; align-items: center; gap: 12px; background: rgba(0,0,0,0.2);
-            padding: 10px; border-radius: 8px; margin-top: 5px; border: var(--glass-border);
-        }
-        .file-icon { font-size: 1.5rem; color: var(--accent); }
-        .file-info { display: flex; flex-direction: column; }
-        .file-name { font-weight: bold; font-size: 0.9rem; }
-        .file-download { color: var(--text-dim); text-decoration: none; font-size: 0.8rem; }
+        .chat-image { max-width: 100%; border-radius: 8px; margin-top: 5px; }
+        .file-attachment { display: flex; align-items: center; gap: 12px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 8px; margin-top: 5px; }
+        audio { width: 220px; height: 30px; margin-top: 5px; }
 
-        /* INPUT BAR */
-        form {
-            padding: 15px; background: rgba(0,0,0,0.4); backdrop-filter: blur(20px);
-            display: flex; align-items: center; gap: 10px; border-top: var(--glass-border);
-        }
-        .input-wrapper {
-            flex-grow: 1; background: var(--glass); border-radius: 25px;
-            display: flex; align-items: center; padding: 5px 15px; border: var(--glass-border);
-        }
-        input {
-            flex-grow: 1; background: transparent; border: none; padding: 10px;
-            color: white; font-size: 1rem; outline: none;
-        }
-        .icon-btn {
-            background: none; border: none; color: var(--text-dim); font-size: 1.3rem;
-            cursor: pointer; transition: 0.2s; padding: 5px;
-        }
+        /* INPUT */
+        form { padding: 15px; background: rgba(0,0,0,0.4); backdrop-filter: blur(20px); display: flex; align-items: center; gap: 10px; border-top: var(--glass-border); }
+        .input-wrapper { flex-grow: 1; background: var(--glass); border-radius: 25px; display: flex; align-items: center; padding: 5px 15px; border: var(--glass-border); }
+        input { flex-grow: 1; background: transparent; border: none; padding: 10px; color: white; outline: none; }
+        .icon-btn { background: none; border: none; color: rgba(255,255,255,0.6); font-size: 1.3rem; cursor: pointer; padding: 5px; }
         .icon-btn:hover { color: var(--accent); }
-        .send-btn {
-            background: var(--accent); border: none; width: 45px; height: 45px;
-            border-radius: 50%; color: #000; font-size: 1.2rem; cursor: pointer;
-            box-shadow: 0 0 15px rgba(0, 210, 255, 0.4); display: flex; align-items: center; justify-content: center;
-        }
-
-        /* MOBILE RESPONSIVE */
-        @media (max-width: 768px) {
-            .sidebar { position: absolute; left: -100%; height: 100%; z-index: 100; background: #0f0c29; width: 80%; }
-            .sidebar.active { left: 0; }
-            .menu-toggle { display: block !important; }
-        }
-        .menu-toggle { display: none; color: white; font-size: 1.4rem; background: none; border: none; }
-
-        /* LOGIN SCREEN */
-        #login-screen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--bg-gradient); z-index: 5000; display: flex; align-items: center; justify-content: center;
-        }
-        .login-card {
-            background: rgba(255,255,255,0.05); padding: 40px; border-radius: 20px;
-            backdrop-filter: blur(20px); border: var(--glass-border); text-align: center; width: 80%; max-width: 350px;
-        }
-        .login-input {
-            width: 100%; padding: 15px; margin: 10px 0; background: rgba(0,0,0,0.3);
-            border: var(--glass-border); border-radius: 10px; color: white; outline: none; box-sizing: border-box;
-        }
-        .enter-btn {
-            width: 100%; padding: 15px; background: var(--accent); color: #000;
-            border: none; border-radius: 30px; font-weight: bold; cursor: pointer; margin-top: 10px;
-            box-shadow: 0 0 20px rgba(0, 210, 255, 0.3);
-        }
+        .recording { color: #ff4444 !important; animation: pulse 1s infinite; }
+        
+        /* LOGIN */
+        #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-gradient); z-index: 5000; display: flex; align-items: center; justify-content: center; }
+        .login-card { background: rgba(255,255,255,0.05); padding: 40px; border-radius: 20px; backdrop-filter: blur(20px); border: var(--glass-border); text-align: center; width: 80%; max-width: 350px; }
+        .login-input { width: 100%; padding: 15px; margin: 10px 0; background: rgba(0,0,0,0.3); border: var(--glass-border); border-radius: 10px; color: white; outline: none; box-sizing: border-box; }
+        .enter-btn { width: 100%; padding: 15px; background: var(--accent); border: none; border-radius: 30px; font-weight: bold; cursor: pointer; margin-top: 10px; }
 
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        @media (max-width: 768px) { .sidebar { position: absolute; left: -100%; } .menu-toggle { display: block !important; } }
+        .menu-toggle { display: none; color: white; font-size: 1.4rem; background: none; border: none; }
     </style>
 </head>
 <body>
 
     <div id="login-screen">
         <div class="login-card">
-            <h1 style="margin:0 0 20px 0; color:var(--accent);">FutureChat OS</h1>
+            <h1 style="color:var(--accent);">FutureChat OS</h1>
             <input id="uName" class="login-input" placeholder="Codename (e.g. Harish)" autocomplete="off">
             <input id="rName" class="login-input" placeholder="Frequency (Room Name)" autocomplete="off">
             <button class="enter-btn" onclick="enterSystem()">INITIALIZE</button>
@@ -165,42 +93,36 @@
 
     <div class="app-container">
         <div class="sidebar" id="sidebar">
-            <div class="sidebar-header">
-                <i class="ri-radar-line"></i> ACTIVE USERS
-            </div>
-            <ul class="user-list" id="user-list">
-                </ul>
+            <h3 style="color:var(--accent);"><i class="ri-radar-line"></i> ACTIVE USERS</h3>
+            <ul class="user-list" id="user-list"></ul>
         </div>
 
         <div class="chat-area">
             <div class="chat-header">
                 <div style="display:flex; align-items:center; gap:10px;">
-                    <button class="menu-toggle" onclick="toggleSidebar()"><i class="ri-menu-2-line"></i></button>
-                    <div>
-                        <div class="room-title" id="room-display">Target: Unknown</div>
-                        <div class="typing-indicator" id="typing-display"></div>
-                    </div>
-                </div>
-                <div style="display:flex; gap:15px;">
-                    <button class="icon-btn"><i class="ri-phone-fill"></i></button>
-                    <button class="icon-btn"><i class="ri-vidicon-fill"></i></button>
+                    <button class="menu-toggle" onclick="document.getElementById('sidebar').classList.toggle('active')"><i class="ri-menu-2-line"></i></button>
+                    <div><div id="room-display" style="font-weight:bold;">Unknown</div><div id="typing-display" style="font-size:0.8rem; color:var(--accent);"></div></div>
                 </div>
             </div>
 
             <ul id="messages"></ul>
 
-            <input type="file" id="fileInput" style="display: none;"> <input type="file" id="imgInput" accept="image/*" style="display: none;"> <form id="form">
+            <div class="reply-bar" id="reply-bar">
+                <div style="font-size:0.9rem; color:var(--accent);">Replying to message...</div>
+                <i class="ri-close-circle-fill" style="cursor:pointer; color:white;" onclick="cancelReply()"></i>
+            </div>
+
+            <input type="file" id="fileInput" style="display: none;">
+            <input type="file" id="imgInput" accept="image/*" style="display: none;">
+
+            <form id="form">
                 <div class="input-wrapper">
-                    <button type="button" class="icon-btn" onclick="document.getElementById('fileInput').click()">
-                        <i class="ri-attachment-2"></i>
-                    </button>
-                    <button type="button" class="icon-btn" onclick="document.getElementById('imgInput').click()">
-                        <i class="ri-image-line"></i>
-                    </button>
-                    
-                    <input id="input" autocomplete="off" placeholder="Type a message..." oninput="handleTyping()">
+                    <button type="button" class="icon-btn" onclick="document.getElementById('fileInput').click()"><i class="ri-attachment-2"></i></button>
+                    <button type="button" class="icon-btn" onclick="document.getElementById('imgInput').click()"><i class="ri-image-line"></i></button>
+                    <button type="button" class="icon-btn" id="micBtn"><i class="ri-mic-line"></i></button>
+                    <input id="input" autocomplete="off" placeholder="Type..." oninput="handleTyping()">
                 </div>
-                <button class="send-btn"><i class="ri-send-plane-2-fill"></i></button>
+                <button class="icon-btn" style="color:var(--accent);"><i class="ri-send-plane-2-fill"></i></button>
             </form>
         </div>
     </div>
@@ -210,9 +132,10 @@
         var socket = io();
         var myName = localStorage.getItem("chatName") || "";
         var myRoom = localStorage.getItem("chatRoom") || "";
+        var activeReply = null; // Stores message replying to
         var typingTimer;
 
-        if (myName && myRoom) {
+        if(myName && myRoom) {
             document.getElementById("uName").value = myName;
             document.getElementById("rName").value = myRoom;
         }
@@ -225,47 +148,49 @@
                 localStorage.setItem("chatName", myName);
                 localStorage.setItem("chatRoom", myRoom);
                 document.getElementById("login-screen").style.display = "none";
-                document.getElementById("room-display").innerText = "Target: " + myRoom;
-                
+                document.getElementById("room-display").innerText = myRoom;
                 socket.emit('join room', { user: myName, room: myRoom });
             }
         }
 
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('active');
+        // --- FILE HANDLING ---
+        document.getElementById('fileInput').addEventListener('change', function() { sendFile(this.files[0], 'file'); });
+        document.getElementById('imgInput').addEventListener('change', function() { sendFile(this.files[0], 'image'); });
+
+        function sendFile(file, type) {
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                var msgData = { user: myName, room: myRoom, type: type, content: evt.target.result, fileName: file.name };
+                socket.emit('chat message', msgData);
+            }
+            reader.readAsDataURL(file);
         }
 
-        // --- FILE HANDLING ---
-        // 1. Generic Files (PDF, APK, Zip)
-        document.getElementById('fileInput').addEventListener('change', function() {
-            const file = this.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(evt) {
-                    // Send as FILE type
-                    var msgData = { 
-                        user: myName, room: myRoom, type: 'file', 
-                        content: evt.target.result, fileName: file.name 
+        // --- VOICE NOTES ---
+        let mediaRecorder, audioChunks = [];
+        const micBtn = document.getElementById('micBtn');
+        micBtn.addEventListener('click', async () => {
+            if (!mediaRecorder || mediaRecorder.state === "inactive") {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    mediaRecorder.start();
+                    micBtn.classList.add('recording');
+                    audioChunks = [];
+                    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+                    mediaRecorder.onstop = () => {
+                        const blob = new Blob(audioChunks, { type: 'audio/webm' });
+                        const reader = new FileReader();
+                        reader.readAsDataURL(blob);
+                        reader.onloadend = () => {
+                            socket.emit('chat message', { user: myName, room: myRoom, type: 'audio', content: reader.result });
+                        };
                     };
-                    socket.emit('chat message', msgData);
-                }
-                reader.readAsDataURL(file);
-            }
-        });
-
-        // 2. Images (Compressed)
-        document.getElementById('imgInput').addEventListener('change', function() {
-            const file = this.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(evt) {
-                    var msgData = { 
-                        user: myName, room: myRoom, type: 'image', 
-                        content: evt.target.result 
-                    };
-                    socket.emit('chat message', msgData);
-                }
-                reader.readAsDataURL(file);
+                } catch(e) { alert("Mic Error"); }
+            } else {
+                mediaRecorder.stop();
+                micBtn.classList.remove('recording');
             }
         });
 
@@ -274,23 +199,50 @@
             e.preventDefault();
             var input = document.getElementById('input');
             if (input.value && myName) {
-                socket.emit('chat message', { user: myName, room: myRoom, type: 'text', content: input.value });
+                var msgData = { 
+                    user: myName, room: myRoom, type: 'text', content: input.value, 
+                    replyTo: activeReply // Attach Reply Data
+                };
+                socket.emit('chat message', msgData);
                 input.value = '';
+                cancelReply();
             }
         });
+
+        // --- ACTIONS (Reply/Delete) ---
+        function startReply(id, text) {
+            activeReply = { id, text };
+            document.getElementById('reply-bar').style.display = 'flex';
+            document.getElementById('reply-bar').children[0].innerText = "Replying to: " + text.substring(0, 30) + "...";
+            document.getElementById('input').focus();
+        }
+        function cancelReply() {
+            activeReply = null;
+            document.getElementById('reply-bar').style.display = 'none';
+        }
+        function deleteMessage(id) {
+            if(confirm("Delete for everyone?")) socket.emit('delete message', id);
+        }
 
         // --- SOCKET EVENTS ---
         socket.on('load history', (msgs) => msgs.forEach(displayMessage));
         socket.on('chat message', displayMessage);
         
+        socket.on('message deleted', (id) => {
+            const el = document.getElementById(id);
+            if(el) {
+                el.style.opacity = '0.5';
+                el.innerHTML = '<i style="font-size:0.8rem; color:#aaa;">Message deleted</i>';
+            }
+        });
+
         socket.on('room users', (users) => {
             const list = document.getElementById('user-list');
             list.innerHTML = "";
             users.forEach(u => {
                 let li = document.createElement('li');
                 li.className = 'user-item';
-                li.innerHTML = `<img src="https://api.dicebear.com/7.x/initials/svg?seed=${u}&backgroundColor=00d2ff" style="width:30px; border-radius:50%"> 
-                                <span>${u}</span> <div class="online-dot"></div>`;
+                li.innerHTML = `<img src="https://api.dicebear.com/7.x/initials/svg?seed=${u}&backgroundColor=00d2ff" style="width:30px; border-radius:50%"> <span>${u}</span>`;
                 list.appendChild(li);
             });
         });
@@ -306,34 +258,32 @@
 
         function displayMessage(data) {
             var item = document.createElement('li');
+            item.id = data._id; // Set ID for deletion
             item.classList.add(data.user === myName ? "my-message" : "other-message");
             
             let contentHtml = "";
-            
-            // RENDER TYPES
-            if (data.type === 'image') {
-                contentHtml = `<img src="${data.content}" class="chat-image">`;
-            } 
-            else if (data.type === 'file') {
-                contentHtml = `
-                    <div class="file-attachment">
-                        <i class="ri-file-zip-line file-icon"></i>
-                        <div class="file-info">
-                            <span class="file-name">${data.fileName || "File"}</span>
-                            <a href="${data.content}" download="${data.fileName}" class="file-download">Download</a>
-                        </div>
-                    </div>`;
-            } 
-            else {
-                contentHtml = data.content;
+            if (data.type === 'image') contentHtml = `<img src="${data.content}" class="chat-image">`;
+            else if (data.type === 'file') contentHtml = `<div class="file-attachment"><i class="ri-file-zip-line"></i> <a href="${data.content}" download="${data.fileName}" style="color:white;">${data.fileName}</a></div>`;
+            else if (data.type === 'audio') contentHtml = `<audio controls src="${data.content}"></audio>`;
+            else contentHtml = data.content;
+
+            // Reply Preview
+            let replyHtml = "";
+            if(data.replyTo) {
+                replyHtml = `<div class="reply-preview"><small>${data.replyTo.text}</small></div>`;
             }
 
-            // Time & Ticks
-            let time = new Date(data.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            let meta = `<div class="msg-meta">${time} <i class="ri-check-double-line" style="color:#00ff88"></i></div>`;
-            let sender = data.user !== myName ? `<span class="sender-name">${data.user}</span>` : '';
+            // Delete & Reply Buttons
+            let actionsHtml = `
+                <div class="msg-actions">
+                    <i class="ri-reply-fill action-icon" onclick="startReply('${data._id}', '${data.type === 'text' ? data.content : 'Attachment'}')"></i>
+                    ${data.user === myName ? `<i class="ri-delete-bin-fill action-icon delete-btn" onclick="deleteMessage('${data._id}')"></i>` : ''}
+                </div>`;
 
-            item.innerHTML = `${sender} ${contentHtml} ${meta}`;
+            let sender = data.user !== myName ? `<span style="font-size:0.75rem; color:var(--accent); display:block; margin-bottom:4px;">${data.user}</span>` : '';
+            let time = new Date(data.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+            item.innerHTML = `${actionsHtml} ${sender} ${replyHtml} ${contentHtml} <div style="text-align:right; font-size:0.7rem; opacity:0.6; margin-top:5px;">${time}</div>`;
             document.getElementById('messages').appendChild(item);
             window.scrollTo(0, document.body.scrollHeight);
         }

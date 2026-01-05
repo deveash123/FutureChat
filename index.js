@@ -12,24 +12,24 @@ mongoose.connect(connectionString)
   .then(() => console.log('✅ MongoDB Connected!'))
   .catch((err) => console.error('❌ DB Error:', err));
 
-// --- UPDATED SCHEMA (Supports Files) ---
+// --- SCHEMA ---
 const msgSchema = new mongoose.Schema({
     user: String,
     room: String,
-    type: String,      // 'text', 'image', 'file'
-    content: String,   // Text or Base64 Data
-    fileName: String,  // Name of the file (e.g., "app-release.apk")
+    type: String,      // 'text', 'image', 'file', 'audio'
+    content: String,   
+    fileName: String,
+    replyTo: Object,   // NEW: Stores the message you are replying to
     avatar: String,
     timestamp: { type: Date, default: Date.now }
 });
 const Msg = mongoose.model('Msg', msgSchema);
 
-const io = new Server(server, { maxHttpBufferSize: 1e8 }); // 100MB Limit
+const io = new Server(server, { maxHttpBufferSize: 1e8 });
 app.use(express.static(__dirname));
 
 app.get('/', (req, res) => { res.sendFile(__dirname + '/index.html'); });
 
-// TRACK USERS
 let onlineUsers = {};
 
 io.on('connection', (socket) => {
@@ -38,17 +38,15 @@ io.on('connection', (socket) => {
     socket.on('join room', ({ user, room }) => {
         socket.join(room);
         onlineUsers[socket.id] = { user, room };
-        
-        // 1. Send Update to Room (Who is here?)
         io.to(room).emit('room users', getRoomUsers(room));
         
-        // 2. Load History
+        // Load History
         Msg.find({ room: room }).sort({ timestamp: 1 }).limit(50).then(messages => {
             socket.emit('load history', messages);
         });
     });
 
-    // HANDLE MESSAGES & FILES
+    // HANDLE MESSAGES
     socket.on('chat message', (data) => {
         const avatarUrl = `https://api.dicebear.com/7.x/initials/svg?seed=${data.user}&backgroundColor=000000`;
         
@@ -58,11 +56,19 @@ io.on('connection', (socket) => {
             type: data.type,
             content: data.content,
             fileName: data.fileName || "",
+            replyTo: data.replyTo || null, // Handle Reply
             avatar: avatarUrl
         });
         
         newMsg.save().then((savedMsg) => {
             io.to(data.room).emit('chat message', savedMsg);
+        });
+    });
+
+    // DELETE MESSAGE
+    socket.on('delete message', (msgId) => {
+        Msg.findByIdAndDelete(msgId).then(() => {
+            io.to(onlineUsers[socket.id]?.room).emit('message deleted', msgId);
         });
     });
 
@@ -80,7 +86,6 @@ io.on('connection', (socket) => {
     });
 });
 
-// Helper: Get users in a specific room
 function getRoomUsers(room) {
     return Object.values(onlineUsers).filter(u => u.room === room).map(u => u.user);
 }
