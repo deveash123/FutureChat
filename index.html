@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FutureChat v4 (App Mode)</title>
+    <title>FutureChat v5 (Photos)</title>
     
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#000000">
@@ -125,6 +125,14 @@
 
         .msg-name { font-size: 0.7rem; margin-bottom: 4px; opacity: 0.8; font-weight: bold; }
 
+        /* Images inside chat */
+        .chat-image {
+            max-width: 100%;
+            border-radius: 10px;
+            margin-top: 5px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
         .my-message {
             align-self: flex-end;
             background: linear-gradient(135deg, rgba(0, 198, 255, 0.2), rgba(0, 114, 255, 0.2));
@@ -168,11 +176,11 @@
             font-size: 1rem;
         }
 
-        button {
+        /* Button Styling */
+        .btn-icon {
             width: 48px; height: 48px;
             border-radius: 50%;
             border: none;
-            background: var(--primary);
             color: black;
             font-size: 1.2rem;
             cursor: pointer;
@@ -180,6 +188,9 @@
             align-items: center;
             justify-content: center;
         }
+
+        .btn-send { background: var(--primary); }
+        .btn-camera { background: #333; color: white; border: 1px solid #555; }
 
         @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
     </style>
@@ -201,9 +212,16 @@
 
     <ul id="messages"></ul>
 
+    <input type="file" id="fileInput" accept="image/*" style="display: none;">
+
     <form id="form" action="">
-        <input id="input" autocomplete="off" placeholder="Type here..." />
-        <button><i class="ri-send-plane-fill"></i></button>
+        <button type="button" class="btn-icon btn-camera" onclick="document.getElementById('fileInput').click()">
+            <i class="ri-image-add-line"></i>
+        </button>
+
+        <input id="input" autocomplete="off" placeholder="Type..." />
+        
+        <button class="btn-icon btn-send"><i class="ri-send-plane-fill"></i></button>
     </form>
 
     <script src="/socket.io/socket.io.js"></script>
@@ -234,21 +252,39 @@
 
         var form = document.getElementById('form');
         var input = document.getElementById('input');
+        var fileInput = document.getElementById('fileInput');
         var messages = document.getElementById('messages');
 
+        // 1. Handle Text Submit
         form.addEventListener('submit', function(e) {
             e.preventDefault();
             if (input.value && myName) {
-                var msgData = { user: myName, text: input.value };
+                var msgData = { user: myName, type: 'text', content: input.value };
                 socket.emit('chat message', JSON.stringify(msgData));
                 input.value = '';
                 input.focus();
             }
         });
 
+        // 2. Handle Image Selection
+        fileInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file && myName) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    const imgData = evt.target.result; // This is the image as a text string
+                    var msgData = { user: myName, type: 'image', content: imgData };
+                    socket.emit('chat message', JSON.stringify(msgData));
+                };
+                reader.readAsDataURL(file); // Convert image to string
+                this.value = ''; // Reset input
+            }
+        });
+
+        // 3. Receive Messages (Text or Image)
         socket.on('chat message', function(msg) {
             var data;
-            try { data = JSON.parse(msg); } catch(e) { data = { user: "Anon", text: msg }; }
+            try { data = JSON.parse(msg); } catch(e) { data = { user: "Anon", type: 'text', content: msg }; }
 
             var item = document.createElement('li');
             if (data.user === myName) {
@@ -257,7 +293,15 @@
                 item.classList.add("other-message");
             }
 
-            item.innerHTML = `<div class="msg-name">${data.user}</div> ${data.text}`;
+            // Decide what to show based on TYPE
+            let contentHtml = "";
+            if (data.type === 'image') {
+                contentHtml = `<img src="${data.content}" class="chat-image" />`;
+            } else {
+                contentHtml = data.content; // Normal text
+            }
+
+            item.innerHTML = `<div class="msg-name">${data.user}</div> ${contentHtml}`;
             messages.appendChild(item);
             window.scrollTo(0, document.body.scrollHeight);
             messages.scrollTop = messages.scrollHeight;
