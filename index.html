@@ -1,45 +1,253 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <title>My Future Chat</title>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>FutureChat Premium</title>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&display=swap" rel="stylesheet">
+
     <style>
-      body { background-color: #111; color: white; font-family: sans-serif; text-align: center; margin-top: 50px; }
-      input { padding: 10px; width: 60%; border-radius: 20px; border: none; }
-      button { padding: 10px 20px; border-radius: 20px; background-color: #6C63FF; color: white; border: none; cursor: pointer; }
-      #messages { list-style-type: none; padding: 0; display: flex; flex-direction: column; align-items: center; }
-      #messages li { margin: 5px; background: #333; padding: 10px 20px; border-radius: 20px; max-width: 80%; }
+        /* --- CORE VISUALS --- */
+        :root {
+            --primary-gradient: linear-gradient(135deg, #00C6FF, #0072FF);
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+            --gloss-highlight: rgba(255, 255, 255, 0.15);
+        }
+
+        body {
+            margin: 0;
+            background: #050505;
+            /* Deep Space Background */
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(0, 114, 255, 0.2) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(255, 0, 212, 0.15) 0%, transparent 40%);
+            font-family: 'Outfit', sans-serif;
+            color: white;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* --- HEADER (Glass Bar) --- */
+        header {
+            padding: 15px 20px;
+            background: rgba(20, 20, 20, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: var(--glass-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 100;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand i {
+            font-size: 1.5rem;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.2rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .status-dot {
+            height: 10px;
+            width: 10px;
+            background-color: #00ff88;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #00ff88;
+            animation: pulse 2s infinite;
+        }
+
+        /* --- CHAT AREA (Smooth Scroll) --- */
+        #messages {
+            list-style: none;
+            padding: 20px;
+            margin: 0;
+            flex-grow: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            scroll-behavior: smooth;
+        }
+
+        /* Custom Scrollbar */
+        #messages::-webkit-scrollbar { width: 5px; }
+        #messages::-webkit-scrollbar-track { background: transparent; }
+        #messages::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 10px; }
+
+        /* --- MESSAGE BUBBLES (Glossy) --- */
+        li {
+            padding: 12px 18px;
+            border-radius: 18px;
+            border-top-left-radius: 2px; /* Makes it look like a chat bubble */
+            max-width: 75%;
+            font-weight: 300;
+            line-height: 1.5;
+            position: relative;
+            animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Fluid bounce */
+            
+            /* The Glass Effect */
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: var(--glass-border);
+            border-top: 1px solid var(--gloss-highlight); /* Shiny top edge */
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        /* Simulating "My" messages vs "Others" for style */
+        li:nth-child(even) {
+            align-self: flex-end;
+            border-top-left-radius: 18px;
+            border-bottom-right-radius: 2px;
+            background: linear-gradient(135deg, rgba(0, 198, 255, 0.2), rgba(0, 114, 255, 0.2));
+            border-color: rgba(0, 198, 255, 0.3);
+        }
+
+        /* --- INPUT AREA (Floating Pill) --- */
+        form {
+            padding: 20px;
+            background: transparent;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .input-group {
+            flex-grow: 1;
+            background: rgba(255, 255, 255, 0.08);
+            border: var(--glass-border);
+            border-radius: 30px;
+            padding: 5px 20px;
+            display: flex;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            transition: 0.3s;
+        }
+
+        .input-group:focus-within {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 0 20px rgba(0, 198, 255, 0.1);
+        }
+
+        input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: white;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            padding: 10px 0;
+            outline: none;
+        }
+
+        /* --- GLOSSY SEND BUTTON --- */
+        button {
+            height: 50px;
+            width: 50px;
+            border-radius: 50%;
+            border: none;
+            background: var(--primary-gradient);
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 114, 255, 0.4);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        button:hover {
+            transform: scale(1.1) rotate(-10deg);
+            box-shadow: 0 8px 25px rgba(0, 114, 255, 0.6);
+        }
+
+        button:active {
+            transform: scale(0.9);
+        }
+
+        /* --- ANIMATIONS --- */
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px) scale(0.9); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; box-shadow: 0 0 0 0 rgba(0, 255, 136, 0.7); }
+            70% { opacity: 0.7; box-shadow: 0 0 0 10px rgba(0, 255, 136, 0); }
+            100% { opacity: 1; box-shadow: 0 0 0 0 rgba(0, 255, 136, 0); }
+        }
     </style>
-  </head>
-  <body>
-    <h1>Future Chat 🚀</h1>
-    <ul id="messages"></ul>
+</head>
+<body>
+
+    <header>
+        <div class="brand">
+            <i class="ri-bubble-chart-fill"></i>
+            <h1>FutureChat</h1>
+        </div>
+        <div class="status-dot"></div>
+    </header>
+
+    <ul id="messages">
+        </ul>
+
     <form id="form" action="">
-      <input id="input" autocomplete="off" placeholder="Type a message..." /><button>Send</button>
+        <div class="input-group">
+            <input id="input" autocomplete="off" placeholder="Type your message..." />
+        </div>
+        <button><i class="ri-send-plane-fill"></i></button>
     </form>
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
-      var socket = io();
+        var socket = io();
 
-      var form = document.getElementById('form');
-      var input = document.getElementById('input');
+        var form = document.getElementById('form');
+        var input = document.getElementById('input');
+        var messages = document.getElementById('messages');
 
-      // SENDING
-      form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        if (input.value) {
-          socket.emit('chat message', input.value);
-          input.value = '';
-        }
-      });
+        // Sounds (Optional: Remove if annoying)
+        // const sendSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2354/2354-preview.mp3');
 
-      // RECEIVING
-      socket.on('chat message', function(msg) {
-        var item = document.createElement('li');
-        item.textContent = msg;
-        document.getElementById('messages').appendChild(item);
-        window.scrollTo(0, document.body.scrollHeight);
-      });
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (input.value) {
+                socket.emit('chat message', input.value);
+                input.value = '';
+                input.focus();
+            }
+        });
+
+        socket.on('chat message', function(msg) {
+            var item = document.createElement('li');
+            item.textContent = msg;
+            messages.appendChild(item);
+            
+            // Auto Smooth Scroll to bottom
+            messages.scrollTop = messages.scrollHeight;
+            
+            // Optional: Play sound
+            // sendSound.play();
+        });
     </script>
-  </body>
+</body>
 </html>
