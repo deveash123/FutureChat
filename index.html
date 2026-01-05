@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>My Future Chat</title>
+    <style>
+      body { background-color: #111; color: white; font-family: sans-serif; text-align: center; margin-top: 50px; }
+      input { padding: 10px; width: 60%; border-radius: 20px; border: none; }
+      button { padding: 10px 20px; border-radius: 20px; background-color: #6C63FF; color: white; border: none; cursor: pointer; }
+      #messages { list-style-type: none; padding: 0; display: flex; flex-direction: column; align-items: center; }
+      #messages li { margin: 5px; background: #333; padding: 10px 20px; border-radius: 20px; max-width: 80%; }
+    </style>
+  </head>
+  <body>
+    <h1>Future Chat 🚀</h1>
+    <ul id="messages"></ul>
+    <form id="form" action="">
+      <input id="input" autocomplete="off" placeholder="Type a message..." /><button>Send</button>
+    </form>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      var socket = io();
+
+      var form = document.getElementById('form');
+      var input = document.getElementById('input');
+
+      // SENDING
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        if (input.value) {
+          socket.emit('chat message', input.value);
+          input.value = '';
+        }
+      });
+
+      // RECEIVING
+      socket.on('chat message', function(msg) {
+        var item = document.createElement('li');
+        item.textContent = msg;
+        document.getElementById('messages').appendChild(item);
+        window.scrollTo(0, document.body.scrollHeight);
+      });
+    </script>
+  </body>
+</html>
