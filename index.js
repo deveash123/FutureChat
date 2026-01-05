@@ -12,20 +12,29 @@ mongoose.connect(connectionString)
   .then(() => console.log('✅ MongoDB Connected!'))
   .catch((err) => console.error('❌ DB Error:', err));
 
-// --- SCHEMA ---
+// --- SCHEMAS ---
+// 1. Chat Messages
 const msgSchema = new mongoose.Schema({
-    user: String,
-    room: String,
-    type: String,      // 'text', 'image', 'file', 'audio'
-    content: String,   
-    fileName: String,
-    replyTo: Object,   // NEW: Stores the message you are replying to
-    avatar: String,
+    user: String, room: String, type: String, content: String,
+    fileName: String, replyTo: Object, avatar: String,
     timestamp: { type: Date, default: Date.now }
 });
 const Msg = mongoose.model('Msg', msgSchema);
 
-const io = new Server(server, { maxHttpBufferSize: 1e8 });
+// 2. Instagram Posts (NEW)
+const postSchema = new mongoose.Schema({
+    user: String,
+    type: String,       // 'image' or 'video'
+    content: String,    // The media data
+    caption: String,
+    avatar: String,
+    likes: [String],    // List of users who liked it
+    comments: [{ user: String, text: String, timestamp: Date }],
+    timestamp: { type: Date, default: Date.now }
+});
+const Post = mongoose.model('Post', postSchema);
+
+const io = new Server(server, { maxHttpBufferSize: 1e8 }); // 100MB Limit
 app.use(express.static(__dirname));
 
 app.get('/', (req, res) => { res.sendFile(__dirname + '/index.html'); });
@@ -34,60 +43,67 @@ let onlineUsers = {};
 
 io.on('connection', (socket) => {
     
-    // JOIN ROOM
+    // --- 1. CHAT SYSTEM ---
     socket.on('join room', ({ user, room }) => {
         socket.join(room);
         onlineUsers[socket.id] = { user, room };
-        io.to(room).emit('room users', getRoomUsers(room));
         
-        // Load History
-        Msg.find({ room: room }).sort({ timestamp: 1 }).limit(50).then(messages => {
-            socket.emit('load history', messages);
-        });
+        // Load Chat History
+        Msg.find({ room: room }).sort({ timestamp: 1 }).limit(50).then(msgs => socket.emit('load chat', msgs));
+        
+        // Load Social Feed (Global)
+        Post.find().sort({ timestamp: -1 }).limit(20).then(posts => socket.emit('load feed', posts));
     });
 
-    // HANDLE MESSAGES
     socket.on('chat message', (data) => {
         const avatarUrl = `https://api.dicebear.com/7.x/initials/svg?seed=${data.user}&backgroundColor=000000`;
-        
-        const newMsg = new Msg({
+        const newMsg = new Msg({ ...data, avatar: avatarUrl });
+        newMsg.save().then(saved => io.to(data.room).emit('chat message', saved));
+    });
+
+    // --- 2. INSTAGRAM FEATURES ---
+    
+    // Create Post
+    socket.on('create post', (data) => {
+        const avatarUrl = `https://api.dicebear.com/7.x/initials/svg?seed=${data.user}&backgroundColor=000000`;
+        const newPost = new Post({
             user: data.user,
-            room: data.room,
             type: data.type,
             content: data.content,
-            fileName: data.fileName || "",
-            replyTo: data.replyTo || null, // Handle Reply
-            avatar: avatarUrl
+            caption: data.caption,
+            avatar: avatarUrl,
+            likes: [],
+            comments: []
         });
-        
-        newMsg.save().then((savedMsg) => {
-            io.to(data.room).emit('chat message', savedMsg);
-        });
+        newPost.save().then(saved => io.emit('new post', saved));
     });
 
-    // DELETE MESSAGE
-    socket.on('delete message', (msgId) => {
-        Msg.findByIdAndDelete(msgId).then(() => {
-            io.to(onlineUsers[socket.id]?.room).emit('message deleted', msgId);
-        });
-    });
-
-    // TYPING
-    socket.on('typing', ({ room, user }) => socket.to(room).emit('display typing', { user }));
-    socket.on('stop typing', ({ room }) => socket.to(room).emit('hide typing'));
-
-    // DISCONNECT
-    socket.on('disconnect', () => {
-        const userData = onlineUsers[socket.id];
-        if (userData) {
-            delete onlineUsers[socket.id];
-            io.to(userData.room).emit('room users', getRoomUsers(userData.room));
+    // Like Post
+    socket.on('like post', async ({ postId, user }) => {
+        const post = await Post.findById(postId);
+        if(post) {
+            // Toggle Like
+            if(post.likes.includes(user)) {
+                post.likes = post.likes.filter(u => u !== user); // Unlike
+            } else {
+                post.likes.push(user); // Like
+            }
+            await post.save();
+            io.emit('update post', post); // Update everyone
         }
     });
-});
 
-function getRoomUsers(room) {
-    return Object.values(onlineUsers).filter(u => u.room === room).map(u => u.user);
-}
+    // Comment Post
+    socket.on('comment post', async ({ postId, user, text }) => {
+        const post = await Post.findById(postId);
+        if(post) {
+            post.comments.push({ user, text, timestamp: new Date() });
+            await post.save();
+            io.emit('update post', post);
+        }
+    });
+
+    socket.on('disconnect', () => { delete onlineUsers[socket.id]; });
+});
 
 server.listen(3000, () => { console.log('Server running on *:3000'); });
