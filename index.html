@@ -13,10 +13,64 @@
         :root {
             --bg: #000000; --card: #121212; --card-light: #1E1E1E;
             --accent: #00D2FF; --text: #FFFFFF; --text-dim: #888888;
+            --error: #ff4444; --success: #00C851;
         }
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { margin: 0; background: var(--bg); color: var(--text); font-family: 'Plus Jakarta Sans', sans-serif; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
 
+        /* --- AUTH SCREEN --- */
+        #auth-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at 50% 10%, #1a1a1a 0%, #000000 100%);
+            z-index: 9999; display: flex; align-items: center; justify-content: center;
+            transition: opacity 0.5s ease;
+        }
+        .auth-card {
+            width: 90%; max-width: 400px; padding: 40px;
+            background: rgba(20, 20, 20, 0.6); backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5); text-align: center;
+        }
+        .auth-logo { font-size: 2.5rem; font-weight: 800; margin-bottom: 10px; background: linear-gradient(45deg, #fff, var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .auth-subtitle { color: var(--text-dim); margin-bottom: 30px; font-size: 0.9rem; }
+        
+        .auth-input-group { margin-bottom: 15px; text-align: left; }
+        .auth-label { font-size: 0.8rem; color: var(--text-dim); margin-bottom: 5px; display: block; margin-left: 5px; }
+        .auth-input {
+            width: 100%; padding: 16px; background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;
+            color: white; font-size: 1rem; outline: none; transition: 0.3s;
+        }
+        .auth-input:focus { border-color: var(--accent); background: rgba(0, 210, 255, 0.05); }
+
+        .btn-primary {
+            width: 100%; padding: 16px; background: var(--accent); color: black;
+            border: none; border-radius: 12px; font-weight: 700; font-size: 1rem;
+            cursor: pointer; margin-top: 10px; transition: 0.2s;
+        }
+        .btn-primary:active { transform: scale(0.98); opacity: 0.9; }
+
+        .divider { display: flex; align-items: center; gap: 10px; margin: 25px 0; color: var(--text-dim); font-size: 0.8rem; }
+        .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: rgba(255,255,255,0.1); }
+
+        .social-btn {
+            width: 100%; padding: 14px; background: white; color: black;
+            border: none; border-radius: 12px; font-weight: 600; font-size: 0.9rem;
+            cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
+            margin-bottom: 10px; transition: 0.2s;
+        }
+        .social-btn:active { transform: scale(0.98); }
+        .btn-apple { background: white; color: black; }
+        .btn-google { background: #1a1a1a; color: white; border: 1px solid #333; }
+
+        .toggle-auth { margin-top: 20px; font-size: 0.9rem; color: var(--text-dim); cursor: pointer; }
+        .toggle-auth span { color: var(--accent); font-weight: 600; }
+        .error-msg { color: var(--error); font-size: 0.85rem; margin-top: 10px; display: none; }
+
+        /* --- MAIN APP (Hidden initially) --- */
+        #app-container { display: none; height: 100%; flex-direction: column; animation: fadeIn 0.5s ease; }
+        
+        /* ... (Keeping your existing detailed UI styles) ... */
         /* VIEWS */
         .view { position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow-y: auto; padding-bottom: 90px; display: none; background: var(--bg); }
         .view.active { display: block; z-index: 10; animation: fadeIn 0.3s ease; }
@@ -35,13 +89,12 @@
         .list-item { display: flex; align-items: center; gap: 15px; padding: 15px 20px; border-bottom: 1px solid #222; cursor: pointer; }
         .avatar { width: 50px; height: 50px; border-radius: 50%; border: 2px solid #333; }
         
-        /* CHAT UI (Exact Match) */
+        /* CHAT UI */
         .chat-room { display: flex; flex-direction: column; height: 100%; }
         .chat-profile { text-align: center; padding: 20px; background: var(--bg); border-bottom: 1px solid #222; }
         .chat-profile img { width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--accent); }
         .action-row { display: flex; gap: 10px; justify-content: center; margin-top: 15px; }
         .action-btn { background: var(--card-light); border: 1px solid #333; color: var(--accent); padding: 10px 20px; border-radius: 12px; font-weight: 600; flex: 1; max-width: 100px; display: flex; flex-direction: column; align-items: center; gap: 5px; font-size: 0.8rem; cursor: pointer; }
-        .action-btn:active { background: #333; }
 
         .messages-area { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
         .msg { padding: 12px 18px; border-radius: 18px; max-width: 80%; font-size: 1rem; word-wrap: break-word; }
@@ -49,7 +102,6 @@
         .msg-other { align-self: flex-start; background: var(--card-light); color: white; border-bottom-left-radius: 4px; }
         .chat-image { max-width: 100%; border-radius: 10px; }
 
-        /* CHAT INPUT BAR (The Buttons) */
         .chat-bar { padding: 20px; background: var(--bg); border-top: 1px solid #222; }
         .input-box { width: 100%; background: #1E1E1E; border: none; color: white; padding: 15px; border-radius: 12px; margin-bottom: 15px; outline: none; font-size: 1rem; }
         .btn-row { display: flex; gap: 15px; }
@@ -73,114 +125,138 @@
 </head>
 <body>
 
-    <div id="login-modal" class="modal" style="display:flex; background:black;">
-        <div class="modal-box" style="border:none;">
-            <h1 style="font-size: 2rem; margin-bottom: 30px; color:var(--accent);">NEXUS OS</h1>
-            <input id="username" class="modal-input" placeholder="Enter Codename">
-            <button onclick="login()" class="big-btn btn-blue">Enter System</button>
-        </div>
-    </div>
-
-    <div id="edit-modal" class="modal">
-        <div class="modal-box">
-            <h3>Edit Profile</h3>
-            <input id="edit-bio" class="modal-input" placeholder="New Bio...">
-            <div class="btn-row">
-                <button onclick="document.getElementById('edit-modal').style.display='none'" class="big-btn btn-dark">Cancel</button>
-                <button onclick="saveProfile()" class="big-btn btn-blue">Save</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="view-explore" class="view active">
-        <div class="header"><h1>Discover</h1> <button class="add-btn" onclick="document.getElementById('postFile').click()"><i class="ri-add-line"></i></button></div>
-        <div id="feed-container"></div>
-    </div>
-
-    <div id="view-messages" class="view">
-        <div class="header"><h1>Chats</h1> <button class="add-btn"><i class="ri-add-line"></i></button></div>
-        <div id="chat-list">
-            <div class="list-item" onclick="openChat('Global')">
-                <img src="https://api.dicebear.com/7.x/initials/svg?seed=Global" class="avatar">
-                <div><h3>Global Chat</h3><p style="color:#666">Tap to join</p></div>
-            </div>
-        </div>
-    </div>
-
-    <div id="view-chat-room" class="view" style="z-index: 20; background:black;">
-        <div class="chat-room">
-            <div class="header">
-                <i class="ri-arrow-left-line" style="font-size:1.5rem;" onclick="closeChat()"></i>
-                <h3 id="room-title">Chat</h3>
-                <i class="ri-more-2-fill"></i>
-            </div>
+    <div id="auth-screen">
+        <div class="auth-card">
+            <div class="auth-logo">NEXUS</div>
+            <div class="auth-subtitle">The Future of Connection</div>
             
-            <div class="chat-profile">
-                <img id="room-avatar" src="">
-                <h2 id="room-user" style="margin:10px 0 5px 0;">User</h2>
-                <span style="color:#666">private connection</span>
-                <div class="action-row">
-                    <button class="action-btn" onclick="alert('Calling...')"><i class="ri-phone-line"></i> Call</button>
-                    <button class="action-btn" onclick="alert('Starting Video...')"><i class="ri-vidicon-line"></i> Video</button>
-                    <button class="action-btn" onclick="alert('User Info')"><i class="ri-information-line"></i> Info</button>
+            <div id="login-form">
+                <div class="auth-input-group">
+                    <label class="auth-label">Username</label>
+                    <input id="login-user" class="auth-input" placeholder="Enter your ID">
                 </div>
+                <div class="auth-input-group">
+                    <label class="auth-label">Password</label>
+                    <input id="login-pass" type="password" class="auth-input" placeholder="••••••••">
+                </div>
+                <button onclick="attemptLogin()" class="btn-primary">Secure Login</button>
+                <div id="login-error" class="error-msg">Invalid Credentials</div>
+                
+                <div class="divider">or continue with</div>
+                
+                <button class="social-btn btn-apple"><i class="ri-apple-fill" style="font-size:1.2rem"></i> Apple</button>
+                <button class="social-btn btn-google"><i class="ri-google-fill" style="font-size:1.2rem"></i> Google</button>
+                
+                <div class="toggle-auth" onclick="toggleAuthMode()">New here? <span>Create Account</span></div>
             </div>
 
-            <div id="msg-container" class="messages-area"></div>
-            
-            <div class="chat-bar">
-                <input id="msg-input" class="input-box" placeholder="Type a message..." autocomplete="off">
+            <div id="register-form" style="display:none;">
+                <div class="auth-input-group">
+                    <label class="auth-label">Choose Username</label>
+                    <input id="reg-user" class="auth-input" placeholder="Unique ID">
+                </div>
+                <div class="auth-input-group">
+                    <label class="auth-label">Set Password</label>
+                    <input id="reg-pass" type="password" class="auth-input" placeholder="Strong Password">
+                </div>
+                <button onclick="attemptRegister()" class="btn-primary">Create Identity</button>
+                <div id="reg-error" class="error-msg">Username Taken</div>
+
+                <div class="toggle-auth" onclick="toggleAuthMode()">Already have access? <span>Login</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="app-container">
+        
+        <div id="edit-modal" class="modal">
+            <div class="modal-box">
+                <h3>Edit Profile</h3>
+                <input id="edit-bio" class="modal-input" placeholder="New Bio...">
                 <div class="btn-row">
-                    <button class="big-btn btn-blue" onclick="sendMsg()"><i class="ri-send-plane-fill"></i> Send</button>
-                    <button class="big-btn btn-dark" onclick="document.getElementById('attachFile').click()"><i class="ri-attachment-line"></i> Attach</button>
+                    <button onclick="document.getElementById('edit-modal').style.display='none'" class="big-btn btn-dark">Cancel</button>
+                    <button onclick="saveProfile()" class="big-btn btn-blue">Save</button>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div id="view-profile" class="view">
-        <div class="header"><i class="ri-user-line"></i> <h3>Profile</h3> <i class="ri-settings-line"></i></div>
-        <div style="text-align: center; padding: 20px;">
-            <img id="my-avatar" src="" class="avatar" style="width:100px; height:100px; border:none;">
-            <h2 id="my-name">User</h2>
-            <p id="my-bio" style="color:#888;">Loading...</p>
-            <div class="action-row">
-                <button class="action-btn" onclick="document.getElementById('edit-modal').style.display='flex'">Edit Profile</button>
-                <button class="action-btn" onclick="alert('Opening Settings...')">Settings</button>
-                <button class="action-btn" onclick="alert('Profile Link Copied!')">Share</button>
+        <div id="view-explore" class="view active">
+            <div class="header"><h1>Discover</h1> <button class="add-btn" onclick="document.getElementById('postFile').click()"><i class="ri-add-line"></i></button></div>
+            <div id="feed-container"></div>
+        </div>
+
+        <div id="view-messages" class="view">
+            <div class="header"><h1>Chats</h1> <button class="add-btn"><i class="ri-add-line"></i></button></div>
+            <div id="chat-list">
+                <div class="list-item" onclick="openChat('Global')">
+                    <img src="https://api.dicebear.com/7.x/initials/svg?seed=Global" class="avatar">
+                    <div><h3>Global Chat</h3><p style="color:#666">Tap to join</p></div>
+                </div>
             </div>
         </div>
-        <div style="padding: 20px;">
-            <div style="background:var(--card-light); padding:20px; border-radius:15px; margin-bottom:10px;">
-                <div style="color:#888; font-size:0.8rem;">FOLLOWERS</div>
-                <div style="font-size:1.5rem; font-weight:bold;">128</div>
-            </div>
-            <div style="background:var(--card-light); padding:20px; border-radius:15px;">
-                <div style="color:#888; font-size:0.8rem;">PROFILE VIEWS</div>
-                <div style="font-size:1.5rem; font-weight:bold;">1.2k</div>
+
+        <div id="view-chat-room" class="view" style="z-index: 20; background:black;">
+            <div class="chat-room">
+                <div class="header">
+                    <i class="ri-arrow-left-line" style="font-size:1.5rem;" onclick="closeChat()"></i>
+                    <h3 id="room-title">Chat</h3>
+                    <i class="ri-more-2-fill"></i>
+                </div>
+                <div class="chat-profile">
+                    <img id="room-avatar" src="">
+                    <h2 id="room-user" style="margin:10px 0 5px 0;">User</h2>
+                    <span style="color:#666">private connection</span>
+                    <div class="action-row">
+                        <button class="action-btn"><i class="ri-phone-line"></i> Call</button>
+                        <button class="action-btn"><i class="ri-vidicon-line"></i> Video</button>
+                        <button class="action-btn"><i class="ri-information-line"></i> Info</button>
+                    </div>
+                </div>
+                <div id="msg-container" class="messages-area"></div>
+                <div class="chat-bar">
+                    <input id="msg-input" class="input-box" placeholder="Type a message..." autocomplete="off">
+                    <div class="btn-row">
+                        <button class="big-btn btn-blue" onclick="sendMsg()"><i class="ri-send-plane-fill"></i> Send</button>
+                        <button class="big-btn btn-dark" onclick="document.getElementById('attachFile').click()"><i class="ri-attachment-line"></i> Attach</button>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
 
-    <div id="view-comments" class="view">
-        <div class="header"><h1>Comments</h1></div>
-        <div class="list-item">
-            <img src="https://api.dicebear.com/7.x/initials/svg?seed=A" class="avatar">
-            <div><h3>System</h3><p>Welcome to Nexus OS!</p></div>
+        <div id="view-profile" class="view">
+            <div class="header"><i class="ri-user-line"></i> <h3>Profile</h3> <div style="color:var(--error); cursor:pointer;" onclick="logout()"><i class="ri-logout-box-r-line"></i></div></div>
+            <div style="text-align: center; padding: 20px;">
+                <img id="my-avatar" src="" class="avatar" style="width:100px; height:100px; border:none;">
+                <h2 id="my-name">User</h2>
+                <p id="my-bio" style="color:#888;">Loading...</p>
+                <div class="action-row">
+                    <button class="action-btn" onclick="document.getElementById('edit-modal').style.display='flex'">Edit Profile</button>
+                    <button class="action-btn">Settings</button>
+                    <button class="action-btn">Share</button>
+                </div>
+            </div>
         </div>
-    </div>
 
-    <div id="view-followers" class="view">
-        <div class="header"><h1>Followers</h1></div>
-        <div id="users-list"></div>
-    </div>
+        <div id="view-comments" class="view">
+            <div class="header"><h1>Comments</h1></div>
+            <div class="list-item">
+                <img src="https://api.dicebear.com/7.x/initials/svg?seed=A" class="avatar">
+                <div><h3>System</h3><p>Welcome to Nexus OS!</p></div>
+            </div>
+        </div>
 
-    <div class="navbar">
-        <div class="nav-item active" onclick="nav('explore')"><i class="ri-earth-line"></i> Explore</div>
-        <div class="nav-item" onclick="nav('messages')"><i class="ri-chat-3-line"></i> Messaging</div>
-        <div class="nav-item" onclick="nav('profile')"><i class="ri-user-line"></i> Profile</div>
-        <div class="nav-item" onclick="nav('comments')"><i class="ri-discuss-line"></i> Comments</div>
-        <div class="nav-item" onclick="nav('followers')"><i class="ri-group-line"></i> Followers</div>
+        <div id="view-followers" class="view">
+            <div class="header"><h1>Followers</h1></div>
+            <div id="users-list"></div>
+        </div>
+
+        <div class="navbar">
+            <div class="nav-item active" onclick="nav('explore')"><i class="ri-earth-line"></i> Explore</div>
+            <div class="nav-item" onclick="nav('messages')"><i class="ri-chat-3-line"></i> Messaging</div>
+            <div class="nav-item" onclick="nav('profile')"><i class="ri-user-line"></i> Profile</div>
+            <div class="nav-item" onclick="nav('comments')"><i class="ri-discuss-line"></i> Comments</div>
+            <div class="nav-item" onclick="nav('followers')"><i class="ri-group-line"></i> Followers</div>
+        </div>
     </div>
 
     <input type="file" id="postFile" style="display:none;" onchange="uploadPostFile()">
@@ -192,126 +268,86 @@
         let myUser = null;
         let currentRoom = "";
 
-        // LOGIN
-        function login() {
-            const u = document.getElementById('username').value;
-            if(u) {
-                socket.emit('login', u);
-                document.getElementById('login-modal').style.display='none';
+        // --- AUTH SYSTEM ---
+        
+        // 1. Check for Saved Session on Load
+        const savedSession = localStorage.getItem('nexusSession');
+        if (savedSession) {
+            socket.emit('resume session', savedSession);
+        }
+
+        // 2. Toggle UI
+        function toggleAuthMode() {
+            const loginForm = document.getElementById('login-form');
+            const regForm = document.getElementById('register-form');
+            if(loginForm.style.display === 'none') {
+                loginForm.style.display = 'block';
+                regForm.style.display = 'none';
+            } else {
+                loginForm.style.display = 'none';
+                regForm.style.display = 'block';
             }
         }
 
-        // NAV
-        function nav(page) {
-            document.querySelectorAll('.view').forEach(e => e.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(e => e.classList.remove('active'));
-            
-            const map = { 'explore':0, 'messages':1, 'profile':2, 'comments':3, 'followers':4 };
-            document.getElementById('view-'+page).classList.add('active');
-            document.querySelectorAll('.nav-item')[map[page]].classList.add('active');
+        // 3. Login Logic
+        function attemptLogin() {
+            const u = document.getElementById('login-user').value;
+            const p = document.getElementById('login-pass').value;
+            if(u && p) socket.emit('login', { username: u, password: p });
         }
 
-        // SOCKET DATA
-        socket.on('user data', (user) => {
+        // 4. Register Logic
+        function attemptRegister() {
+            const u = document.getElementById('reg-user').value;
+            const p = document.getElementById('reg-pass').value;
+            if(u && p) socket.emit('register', { username: u, password: p });
+        }
+
+        // 5. Auth Handlers
+        socket.on('auth success', (user) => {
+            // Save Session securely
+            localStorage.setItem('nexusSession', user.username);
+            
+            // Hide Auth Screen
+            const authScreen = document.getElementById('auth-screen');
+            authScreen.style.opacity = '0';
+            setTimeout(() => { authScreen.style.display = 'none'; }, 500);
+            
+            // Show App
+            document.getElementById('app-container').style.display = 'flex';
+            
+            // Init Data
             myUser = user;
+            updateProfileUI(user);
+            socket.emit('request data');
+        });
+
+        socket.on('user data', (user) => {
+             // Resume Session Handler
+             myUser = user;
+             document.getElementById('auth-screen').style.display = 'none';
+             document.getElementById('app-container').style.display = 'flex';
+             updateProfileUI(user);
+             socket.emit('request data');
+        });
+
+        socket.on('auth error', (msg) => {
+            alert(msg); // Simple alert for now, can be styled later
+        });
+
+        function logout() {
+            localStorage.removeItem('nexusSession');
+            location.reload();
+        }
+
+        function updateProfileUI(user) {
             document.getElementById('my-name').innerText = user.username;
             document.getElementById('my-bio').innerText = user.bio || "No bio yet";
             document.getElementById('my-avatar').src = user.avatar;
             document.getElementById('edit-bio').value = user.bio || "";
-        });
-
-        socket.on('profile updated', (bio) => {
-            document.getElementById('my-bio').innerText = bio;
-            document.getElementById('edit-modal').style.display='none';
-        });
-
-        socket.on('load users', (users) => {
-            const list = document.getElementById('users-list');
-            list.innerHTML = "";
-            users.forEach(u => {
-                list.innerHTML += `
-                    <div class="list-item" onclick="openChat('${u.username}')">
-                        <img src="${u.avatar}" class="avatar">
-                        <div><h3>${u.username}</h3><p style="color:#666">Tap to chat</p></div>
-                    </div>`;
-            });
-        });
-
-        socket.on('load feed', (posts) => {
-            const c = document.getElementById('feed-container');
-            c.innerHTML = "";
-            posts.forEach(p => {
-                c.innerHTML += `
-                    <div class="feed-card">
-                        <img src="${p.content}" class="feed-img">
-                        <div class="feed-info">
-                            <b>${p.user}</b> ${p.caption}
-                        </div>
-                    </div>`;
-            });
-        });
-
-        // CHAT
-        function openChat(room) {
-            currentRoom = room;
-            document.getElementById('view-chat-room').classList.add('active');
-            document.getElementById('room-title').innerText = room;
-            document.getElementById('room-user').innerText = room;
-            document.getElementById('room-avatar').src = `https://api.dicebear.com/7.x/initials/svg?seed=${room}`;
-            socket.emit('join chat', room);
-        }
-        function closeChat() { document.getElementById('view-chat-room').classList.remove('active'); }
-
-        function sendMsg() {
-            const txt = document.getElementById('msg-input').value;
-            if(txt) {
-                socket.emit('chat message', { user: myUser.username, room: currentRoom, type: 'text', content: txt, avatar: myUser.avatar });
-                document.getElementById('msg-input').value = "";
-            }
         }
 
-        function sendAttachment() {
-            const file = document.getElementById('attachFile').files[0];
-            const reader = new FileReader();
-            reader.onload = e => {
-                socket.emit('chat message', { user: myUser.username, room: currentRoom, type: 'image', content: e.target.result, avatar: myUser.avatar });
-            };
-            reader.readAsDataURL(file);
-        }
-
-        socket.on('load chat', msgs => {
-            document.getElementById('msg-container').innerHTML = "";
-            msgs.forEach(renderMsg);
-        });
-        socket.on('chat message', renderMsg);
-
-        function renderMsg(msg) {
-            const div = document.createElement('div');
-            div.className = `msg ${msg.user === myUser.username ? 'msg-me' : 'msg-other'}`;
-            if(msg.type === 'image') div.innerHTML = `<img src="${msg.content}" class="chat-image">`;
-            else div.innerText = msg.content;
-            
-            const c = document.getElementById('msg-container');
-            c.appendChild(div);
-            c.scrollTop = c.scrollHeight;
-        }
-
-        // POST
-        function uploadPostFile() {
-            const file = document.getElementById('postFile').files[0];
-            const reader = new FileReader();
-            reader.onload = e => {
-                const caption = prompt("Caption:");
-                socket.emit('create post', { user: myUser.username, type: 'image', content: e.target.result, caption: caption || "", avatar: myUser.avatar });
-            };
-            reader.readAsDataURL(file);
-        }
-
-        // PROFILE
-        function saveProfile() {
-            const bio = document.getElementById('edit-bio').value;
-            socket.emit('update profile', { username: myUser.username, bio });
-        }
-    </script>
-</body>
-</html>
+        // --- APP LOGIC (Same as before) ---
+        function nav(page) {
+            document.querySelectorAll('.view').forEach(e => e.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(e => e
