@@ -16,7 +16,7 @@ mongoose.connect(connectionString)
 // --- SCHEMAS ---
 const userSchema = new mongoose.Schema({
     username: { type: String, unique: true },
-    password: String, // In a real app, this should be hashed!
+    password: String, 
     avatar: String, bio: String,
     followers: { type: Number, default: 0 },
     views: { type: Number, default: 0 }
@@ -46,11 +46,19 @@ io.on('connection', (socket) => {
     
     // --- AUTHENTICATION ---
     
-    // 1. REGISTER
+    // 1. REGISTER (SMART FIX APPLIED)
     socket.on('register', async ({ username, password }) => {
         const existing = await User.findOne({ username });
+        
         if (existing) {
-            socket.emit('auth error', 'Username already taken');
+            // FIX: If user exists but has NO password (old account), update it!
+            if (!existing.password) {
+                existing.password = password;
+                await existing.save();
+                socket.emit('auth success', existing);
+            } else {
+                socket.emit('auth error', 'Username already taken');
+            }
         } else {
             const newUser = new User({ 
                 username, password,
@@ -62,7 +70,7 @@ io.on('connection', (socket) => {
         }
     });
 
-    // 2. LOGIN (Password Check)
+    // 2. LOGIN
     socket.on('login', async ({ username, password }) => {
         const user = await User.findOne({ username });
         if (user && user.password === password) {
@@ -72,7 +80,7 @@ io.on('connection', (socket) => {
         }
     });
 
-    // 3. SESSION RESUME (Token/Auto-Login)
+    // 3. SESSION RESUME
     socket.on('resume session', async (username) => {
         const user = await User.findOne({ username });
         if(user) socket.emit('user data', user);
@@ -80,7 +88,6 @@ io.on('connection', (socket) => {
 
     // --- APP FEATURES ---
 
-    // Load Data
     socket.on('request data', async () => {
         const posts = await Post.find().sort({ timestamp: -1 }).limit(20);
         socket.emit('load feed', posts);
