@@ -6,19 +6,20 @@ const { Server } = require("socket.io");
 const mongoose = require('mongoose');
 
 // --- DATABASE CONFIGURATION ---
-// Your Password is set here:
+// Your Password 'deveash1234' is included:
 const connectionString = "mongodb+srv://gdeveash:deveash1234@cluster0.5ypsc7q.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 
 mongoose.connect(connectionString)
   .then(() => console.log('✅ Connected to MongoDB!'))
   .catch((err) => console.error('❌ Database Error:', err));
 
-// UPDATED SCHEMA: Now includes "room"
+// SCHEMA: Messages
 const msgSchema = new mongoose.Schema({
     user: String,
-    room: String,     // <--- NEW: Remembers which group this belongs to
+    room: String,
     type: String,     
     content: String,  
+    avatar: String,   // NEW: Save user avatar URL
     timestamp: { type: Date, default: Date.now }
 });
 const Msg = mongoose.model('Msg', msgSchema);
@@ -28,41 +29,61 @@ app.use(express.static(__dirname));
 
 app.get('/', (req, res) => { res.sendFile(__dirname + '/index.html'); });
 
+// TRACK ONLINE USERS
+let onlineUsers = {};
+
 io.on('connection', (socket) => {
     
-    // 1. When user joins a specific ROOM
-    socket.on('join room', (roomName) => {
-        socket.join(roomName); // Socket.io magic to group users
+    // 1. JOIN ROOM & NOTIFY OTHERS
+    socket.on('join room', ({ user, room }) => {
+        socket.join(room);
         
-        // Load history ONLY for this room
-        Msg.find({ room: roomName }).sort({ timestamp: 1 }).then(messages => {
-            messages.forEach(message => {
-                const historyData = {
-                    user: message.user,
-                    type: message.type,
-                    content: message.content
-                };
-                socket.emit('chat message', JSON.stringify(historyData));
-            });
+        // Track User
+        onlineUsers[socket.id] = { user, room };
+        
+        // Broadcast "User Online" to room
+        io.to(room).emit('user status', { user, status: 'online' });
+
+        // Load History
+        Msg.find({ room: room }).sort({ timestamp: 1 }).limit(50).then(messages => {
+            socket.emit('load history', messages);
         });
     });
 
-    // 2. When sending a message
-    socket.on('chat message', (msgStr) => {
-        const data = JSON.parse(msgStr);
+    // 2. HANDLING TYPING
+    socket.on('typing', ({ room, user }) => {
+        socket.to(room).emit('display typing', { user });
+    });
+
+    socket.on('stop typing', ({ room }) => {
+        socket.to(room).emit('hide typing');
+    });
+
+    // 3. SEND MESSAGE
+    socket.on('chat message', (data) => {
+        // Create Avatar URL based on name
+        const avatarUrl = `https://api.dicebear.com/7.x/initials/svg?seed=${data.user}&backgroundColor=007AFF`;
         
-        // Save with Room Name
         const newMsg = new Msg({
             user: data.user,
-            room: data.room, // <--- Save the room
+            room: data.room,
             type: data.type,
-            content: data.content
+            content: data.content,
+            avatar: avatarUrl
         });
         
-        newMsg.save().then(() => {
-            // Send ONLY to people in that room
-            io.to(data.room).emit('chat message', msgStr);
+        newMsg.save().then((savedMsg) => {
+            io.to(data.room).emit('chat message', savedMsg);
         });
+    });
+
+    // 4. DISCONNECT
+    socket.on('disconnect', () => {
+        const userData = onlineUsers[socket.id];
+        if (userData) {
+            io.to(userData.room).emit('user status', { user: userData.user, status: 'offline' });
+            delete onlineUsers[socket.id];
+        }
     });
 });
 
