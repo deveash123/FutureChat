@@ -3,208 +3,230 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FutureChat v6 (Fast Photos)</title>
+    <title>Chat Minimal</title>
     
     <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#000000">
+    <meta name="theme-color" content="#ffffff">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/724/724715.png">
 
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 
     <style>
         :root {
-            --primary: #00C6FF;
-            --accent: #0072FF;
-            --glass: rgba(255, 255, 255, 0.05);
-            --border: 1px solid rgba(255, 255, 255, 0.1);
+            --primary: #007AFF; /* Apple Blue */
+            --bg: #F2F2F7;
+            --white: #FFFFFF;
+            --bubble-self: #007AFF;
+            --bubble-other: #E9E9EB;
+            --text-self: #FFFFFF;
+            --text-other: #000000;
+            --gray: #8E8E93;
         }
 
         body {
             margin: 0;
-            background: #050505;
-            background-image: radial-gradient(circle at 50% 50%, rgba(0, 114, 255, 0.15) 0%, transparent 50%);
-            font-family: 'Outfit', sans-serif;
-            color: white;
-            height: 100dvh; 
+            background: var(--bg);
+            font-family: 'Inter', sans-serif;
+            height: 100dvh;
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            -webkit-font-smoothing: antialiased;
         }
 
-        /* --- LOGIN SCREEN --- */
-        #login-screen {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.95);
-            backdrop-filter: blur(20px);
-            z-index: 2000;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .login-box {
-            background: var(--glass);
-            padding: 30px;
-            border-radius: 20px;
-            border: var(--border);
-            text-align: center;
-            width: 80%;
-            max-width: 300px;
-        }
-
-        #username-input {
-            padding: 15px;
-            border-radius: 30px;
-            border: 1px solid #333;
-            outline: none;
-            background: rgba(255,255,255,0.1);
-            color: white;
-            text-align: center;
-            font-size: 1.1rem;
-            margin-bottom: 20px;
-            width: 100%;
-            box-sizing: border-box;
-        }
-
-        .btn-enter {
-            padding: 12px 40px;
-            border-radius: 30px;
-            border: none;
-            background: linear-gradient(135deg, var(--primary), var(--accent));
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-            width: 100%;
-        }
-
-        /* --- HEADER --- */
+        /* --- 1. CLEAN HEADER --- */
         header {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             padding: 15px 20px;
-            background: rgba(10, 10, 10, 0.9);
-            border-bottom: var(--border);
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
             z-index: 100;
+            position: sticky;
+            top: 0;
         }
-        
-        .brand { font-weight: 700; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
-        .brand i { color: var(--primary); }
-        .user-badge { font-size: 0.8rem; color: #aaa; background: rgba(255,255,255,0.1); padding: 5px 10px; border-radius: 10px;}
 
-        /* --- CHAT AREA --- */
+        .brand {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .user-pill {
+            font-size: 0.8rem;
+            color: var(--gray);
+            font-weight: 500;
+            background: rgba(0,0,0,0.05);
+            padding: 4px 12px;
+            border-radius: 20px;
+        }
+
+        /* --- 2. CHAT AREA --- */
         #messages {
             list-style: none;
             padding: 20px;
-            padding-bottom: 100px; 
+            padding-bottom: 120px; /* Space for input */
             margin: 0;
             flex-grow: 1;
             overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 12px;
-            scroll-behavior: smooth;
+            gap: 8px;
         }
 
+        /* Message Bubbles */
         li {
             padding: 10px 16px;
             border-radius: 18px;
-            max-width: 85%;
+            max-width: 80%;
             font-size: 0.95rem;
             line-height: 1.4;
-            display: flex;
-            flex-direction: column;
+            position: relative;
             word-wrap: break-word;
-            animation: popIn 0.3s ease;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            animation: fadeIn 0.2s ease;
         }
 
-        .msg-name { font-size: 0.7rem; margin-bottom: 4px; opacity: 0.8; font-weight: bold; }
-
-        /* Images inside chat */
-        .chat-image {
-            max-width: 100%;
-            border-radius: 10px;
-            margin-top: 5px;
-            border: 1px solid rgba(255,255,255,0.2);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        .msg-name {
+            font-size: 0.7rem;
+            margin-bottom: 4px;
+            font-weight: 600;
+            opacity: 0.7;
         }
 
+        /* My Messages (Right) */
         .my-message {
             align-self: flex-end;
-            background: linear-gradient(135deg, rgba(0, 198, 255, 0.2), rgba(0, 114, 255, 0.2));
-            border: 1px solid rgba(0, 198, 255, 0.3);
+            background: var(--bubble-self);
+            color: var(--text-self);
             border-bottom-right-radius: 4px;
         }
-        .my-message .msg-name { color: #80dfff; text-align: right; }
+        .my-message .msg-name { display: none; } /* Hide my name for clean look */
 
+        /* Others Messages (Left) */
         .other-message {
             align-self: flex-start;
-            background: rgba(255, 255, 255, 0.1);
-            border: var(--border);
-            border-top-left-radius: 4px;
+            background: var(--bubble-other);
+            color: var(--text-other);
+            border-bottom-left-radius: 4px;
         }
-        .other-message .msg-name { color: #ff00de; }
+        .other-message .msg-name { color: var(--gray); }
 
-        /* --- INPUT BAR --- */
+        /* Media Styles */
+        .chat-image {
+            max-width: 100%;
+            border-radius: 12px;
+            margin-top: 5px;
+        }
+        
+        audio {
+            height: 30px;
+            margin-top: 5px;
+            max-width: 200px;
+        }
+
+        /* --- 3. INPUT BAR (Bottom) --- */
         form {
             position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            padding: 15px;
-            background: rgba(0,0,0,0.95);
-            border-top: var(--border);
+            bottom: 0; left: 0; width: 100%;
+            background: var(--white);
+            padding: 10px 15px;
             display: flex;
+            align-items: center;
             gap: 10px;
-            z-index: 1000;
+            box-shadow: 0 -2px 20px rgba(0,0,0,0.05);
+            padding-bottom: max(10px, env(safe-area-inset-bottom));
             box-sizing: border-box;
-            padding-bottom: env(safe-area-inset-bottom, 20px);
+            z-index: 1000;
+        }
+
+        .input-wrapper {
+            flex-grow: 1;
+            background: #F2F2F7;
+            border-radius: 25px;
+            padding: 8px 15px;
+            display: flex;
+            align-items: center;
         }
 
         input {
-            flex-grow: 1;
-            background: rgba(255,255,255,0.1);
             border: none;
-            padding: 12px 20px;
-            border-radius: 30px;
-            color: white;
+            background: transparent;
+            width: 100%;
             outline: none;
             font-size: 1rem;
+            font-family: 'Inter', sans-serif;
         }
 
+        /* Buttons */
         .btn-icon {
-            width: 48px; height: 48px;
-            border-radius: 50%;
             border: none;
-            color: black;
-            font-size: 1.2rem;
+            background: transparent;
+            color: var(--primary);
+            font-size: 1.4rem;
             cursor: pointer;
+            padding: 5px;
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: 0.2s;
         }
-        .btn-send { background: var(--primary); }
-        .btn-camera { background: #333; color: white; border: 1px solid #555; }
 
-        @keyframes popIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        .btn-icon:active { transform: scale(0.9); }
+        .recording { color: #FF3B30 !important; animation: pulse 1s infinite; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+
+        /* --- LOGIN OVERLAY --- */
+        #login-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--white);
+            z-index: 5000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .login-input {
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            width: 250px;
+            font-size: 1rem;
+            margin-bottom: 20px;
+            text-align: center;
+            background: #F9F9F9;
+        }
+        .login-btn {
+            background: var(--primary);
+            color: white;
+            padding: 12px 40px;
+            border-radius: 30px;
+            border: none;
+            font-weight: 600;
+            font-size: 1rem;
+        }
     </style>
 </head>
 <body>
 
     <div id="login-screen">
-        <div class="login-box">
-            <h2 style="margin-top:0; color:white;">IDENTIFY</h2>
-            <input type="text" id="username-input" placeholder="Your Name" autocomplete="off">
-            <button class="btn-enter" onclick="joinChat()">Start Chatting</button>
-        </div>
+        <h1 style="font-weight:800; margin-bottom: 30px;">Chat</h1>
+        <input type="text" id="username-input" class="login-input" placeholder="Your Name" autocomplete="off">
+        <button class="login-btn" onclick="joinChat()">Continue</button>
     </div>
 
     <header>
-        <div class="brand"><i class="ri-rfid-fill"></i> FutureChat</div>
-        <div class="user-badge" id="display-name">...</div>
+        <div class="brand">Chat</div>
+        <div class="user-pill" id="display-name">...</div>
     </header>
 
     <ul id="messages"></ul>
@@ -212,18 +234,27 @@
     <input type="file" id="fileInput" accept="image/*" style="display: none;">
 
     <form id="form" action="">
-        <button type="button" class="btn-icon btn-camera" onclick="document.getElementById('fileInput').click()">
-            <i class="ri-image-add-line"></i>
+        <button type="button" class="btn-icon" onclick="document.getElementById('fileInput').click()">
+            <i class="ri-camera-line"></i>
         </button>
-        <input id="input" autocomplete="off" placeholder="Type..." />
-        <button class="btn-icon btn-send"><i class="ri-send-plane-fill"></i></button>
+
+        <button type="button" class="btn-icon" id="micBtn">
+            <i class="ri-mic-line"></i>
+        </button>
+
+        <div class="input-wrapper">
+            <input id="input" autocomplete="off" placeholder="Message..." />
+        </div>
+
+        <button class="btn-icon"><i class="ri-send-plane-fill"></i></button>
     </form>
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
         var socket = io();
         var myName = localStorage.getItem("chatName") || "";
-
+        
+        // --- LOGIN LOGIC ---
         if (myName) closeLogin();
 
         function joinChat() {
@@ -234,19 +265,18 @@
                 closeLogin();
             }
         }
-
         function closeLogin() {
-            document.getElementById("login-screen").style.opacity = "0";
-            setTimeout(() => { document.getElementById("login-screen").style.display = "none"; }, 500);
+            document.getElementById("login-screen").style.display = "none";
             document.getElementById("display-name").innerText = myName;
         }
 
+        // --- CHAT LOGIC ---
         var form = document.getElementById('form');
         var input = document.getElementById('input');
-        var fileInput = document.getElementById('fileInput');
         var messages = document.getElementById('messages');
+        var fileInput = document.getElementById('fileInput');
 
-        // Handle Text
+        // 1. Send Text
         form.addEventListener('submit', function(e) {
             e.preventDefault();
             if (input.value && myName) {
@@ -257,55 +287,102 @@
             }
         });
 
-        // --- NEW: COMPRESS IMAGE BEFORE SENDING ---
+        // 2. Send Image (Compressed)
         fileInput.addEventListener('change', function() {
             const file = this.files[0];
             if (file && myName) {
                 const reader = new FileReader();
-                reader.onload = function(event) {
+                reader.onload = function(evt) {
                     const img = new Image();
                     img.onload = function() {
-                        // Create a "virtual" canvas to resize the image
                         const canvas = document.createElement('canvas');
                         const ctx = canvas.getContext('2d');
-                        
-                        // Set max size to 800px (Good balance of quality vs speed)
-                        const MAX_WIDTH = 800;
+                        const MAX_WIDTH = 600;
                         const scaleFactor = MAX_WIDTH / img.width;
-                        
                         canvas.width = MAX_WIDTH;
                         canvas.height = img.height * scaleFactor;
-                        
-                        // Draw resized image
                         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                        const compressedData = canvas.toDataURL('image/jpeg', 0.6);
                         
-                        // Compress to JPEG (0.7 quality)
-                        const compressedData = canvas.toDataURL('image/jpeg', 0.7);
-                        
-                        // Send!
                         var msgData = { user: myName, type: 'image', content: compressedData };
                         socket.emit('chat message', JSON.stringify(msgData));
                     }
-                    img.src = event.target.result;
+                    img.src = evt.target.result;
                 };
                 reader.readAsDataURL(file);
-                this.value = ''; 
+                this.value = '';
             }
         });
 
-        // Receive Messages
+        // 3. Audio Recorder Logic
+        let mediaRecorder;
+        let audioChunks = [];
+        const micBtn = document.getElementById('micBtn');
+        let isRecording = false;
+
+        micBtn.addEventListener('click', async () => {
+            if (!isRecording) {
+                // START RECORDING
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    mediaRecorder.start();
+                    
+                    isRecording = true;
+                    micBtn.classList.add('recording'); // Turn red
+                    input.placeholder = "Recording audio...";
+                    
+                    audioChunks = [];
+                    mediaRecorder.addEventListener("dataavailable", event => {
+                        audioChunks.push(event.data);
+                    });
+
+                    mediaRecorder.addEventListener("stop", () => {
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        const reader = new FileReader();
+                        reader.readAsDataURL(audioBlob);
+                        reader.onloadend = () => {
+                            const base64String = reader.result;
+                            var msgData = { user: myName, type: 'audio', content: base64String };
+                            socket.emit('chat message', JSON.stringify(msgData));
+                        };
+                    });
+                } catch (err) {
+                    alert("Microphone access denied or not supported.");
+                }
+            } else {
+                // STOP RECORDING
+                mediaRecorder.stop();
+                isRecording = false;
+                micBtn.classList.remove('recording');
+                input.placeholder = "Message...";
+            }
+        });
+
+        // 4. Receive Messages
         socket.on('chat message', function(msg) {
             var data;
-            try { data = JSON.parse(msg); } catch(e) { data = { user: "Anon", type: 'text', content: msg }; }
+            try { data = JSON.parse(msg); } catch(e) { return; }
 
             var item = document.createElement('li');
             item.classList.add(data.user === myName ? "my-message" : "other-message");
 
-            let contentHtml = data.type === 'image' 
-                ? `<img src="${data.content}" class="chat-image" />` 
-                : data.content;
+            let contentHtml = "";
+            if (data.type === 'image') {
+                contentHtml = `<img src="${data.content}" class="chat-image" />`;
+            } else if (data.type === 'audio') {
+                contentHtml = `<audio controls src="${data.content}"></audio>`;
+            } else {
+                contentHtml = data.content;
+            }
 
-            item.innerHTML = `<div class="msg-name">${data.user}</div> ${contentHtml}`;
+            // Only show name for others
+            if(data.user !== myName) {
+                item.innerHTML = `<div class="msg-name">${data.user}</div> ${contentHtml}`;
+            } else {
+                item.innerHTML = contentHtml;
+            }
+
             messages.appendChild(item);
             window.scrollTo(0, document.body.scrollHeight);
             messages.scrollTop = messages.scrollHeight;
