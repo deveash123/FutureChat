@@ -3,391 +3,415 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AURA OS</title>
+    <title>NEXUS OS</title>
     
     <link rel="manifest" href="/manifest.json">
-    <meta name="theme-color" content="#050505">
+    <meta name="theme-color" content="#000000">
     
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 
     <style>
-        /* --- AURA PHYSICS ENGINE (CSS) --- */
+        /* --- NEXUS THEME ENGINE --- */
+        :root {
+            --bg: #000000;
+            --card: #121212;
+            --card-light: #1E1E1E;
+            --accent: #00D2FF; /* Cyan from images */
+            --text: #FFFFFF;
+            --text-dim: #888888;
+            --border: 1px solid #333;
+        }
+
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         
-        :root {
-            --bg-deep: #000000;
-            --glass-panel: rgba(255, 255, 255, 0.03);
-            --glass-border: rgba(255, 255, 255, 0.08);
-            --neon-blue: #00f2ff;
-            --neon-purple: #bd00ff;
-            --text-main: #ffffff;
-            --text-dim: rgba(255, 255, 255, 0.5);
-            --dock-bg: rgba(10, 10, 10, 0.6);
-        }
-
         body {
-            margin: 0; background: var(--bg-deep); color: var(--text-main);
-            font-family: 'Space Grotesk', sans-serif;
-            height: 100dvh; overflow: hidden; display: flex; flex-direction: column;
-            /* Animated Aurora Background */
-            background: radial-gradient(circle at 10% 20%, rgba(189, 0, 255, 0.15) 0%, transparent 40%),
-                        radial-gradient(circle at 90% 80%, rgba(0, 242, 255, 0.15) 0%, transparent 40%);
-            animation: breathe 10s infinite alternate;
+            margin: 0; background: var(--bg); color: var(--text);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            height: 100dvh; display: flex; flex-direction: column; overflow: hidden;
         }
 
-        @keyframes breathe { 0% { background-size: 100% 100%; } 100% { background-size: 110% 110%; } }
+        /* --- VIEWS CONTAINER --- */
+        .view-stack { flex-grow: 1; position: relative; overflow: hidden; }
+        .view {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            overflow-y: auto; padding-bottom: 90px;
+            transform: translateX(100%); transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+            background: var(--bg); display: none;
+        }
+        .view.active { transform: translateX(0); display: block; z-index: 10; }
 
-        /* --- LAYOUT MANAGERS --- */
-        .app-view {
-            flex-grow: 1; position: relative; overflow: hidden;
+        /* --- COMPONENTS --- */
+        .header {
+            padding: 20px; display: flex; justify-content: space-between; align-items: center;
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); position: sticky; top: 0; z-index: 50;
+        }
+        .header h1 { margin: 0; font-size: 1.5rem; font-weight: 700; }
+        
+        .add-btn {
+            width: 35px; height: 35px; background: var(--accent); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; color: black; font-weight: bold;
+            font-size: 1.2rem; cursor: pointer; border: none;
+        }
+
+        /* CARDS (Explore Style) */
+        .feed-card {
+            position: relative; margin: 15px; height: 400px; border-radius: 20px; overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .feed-img { width: 100%; height: 100%; object-fit: cover; }
+        .feed-overlay {
+            position: absolute; bottom: 0; left: 0; width: 100%;
+            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+            padding: 20px;
+        }
+        .tag { color: var(--accent); font-size: 0.8rem; font-weight: 700; text-transform: uppercase; margin-bottom: 5px; display: block;}
+
+        /* LIST ITEMS (Followers/Chat Style) */
+        .list-item {
+            display: flex; align-items: center; gap: 15px; padding: 15px 20px;
+            border-bottom: 1px solid #222; cursor: pointer;
+        }
+        .avatar { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid #333; }
+        .list-info h3 { margin: 0; font-size: 1rem; }
+        .list-info p { margin: 2px 0 0 0; color: var(--text-dim); font-size: 0.85rem; }
+        .arrow { margin-left: auto; color: #444; }
+
+        /* PROFILE ANALYTICS CARDS */
+        .analytics-grid { display: grid; gap: 15px; padding: 20px; }
+        .stat-card {
+            background: var(--card-light); padding: 20px; border-radius: 15px;
+        }
+        .stat-label { color: var(--text-dim); font-size: 0.9rem; font-weight: 600; margin-bottom: 5px; }
+        .stat-value { font-size: 1.8rem; font-weight: 700; }
+
+        /* CHAT UI */
+        .chat-room { display: flex; flex-direction: column; height: 100%; }
+        .chat-profile { text-align: center; padding: 20px; background: var(--bg); }
+        .chat-profile img { width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--accent); }
+        .action-row { display: flex; gap: 10px; justify-content: center; margin-top: 15px; }
+        .action-btn {
+            background: var(--card-light); border: 1px solid #333; color: var(--accent);
+            padding: 12px 25px; border-radius: 12px; font-weight: 600; flex: 1; max-width: 100px;
+            display: flex; flex-direction: column; align-items: center; gap: 5px; font-size: 0.8rem;
         }
         
-        .page {
-            position: absolute; width: 100%; height: 100%;
-            overflow-y: auto; padding-bottom: 100px; /* Space for Dock */
-            transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.4s ease;
-            opacity: 0; transform: scale(0.95); pointer-events: none;
-            scrollbar-width: none; /* Hide scrollbar */
+        .messages-area { flex-grow: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+        .msg { padding: 12px 18px; border-radius: 18px; max-width: 80%; font-size: 1rem; }
+        .msg-me { align-self: flex-end; background: var(--accent); color: black; border-bottom-right-radius: 4px; }
+        .msg-other { align-self: flex-start; background: var(--card-light); color: white; border-bottom-left-radius: 4px; }
+        
+        .chat-input-bar {
+            padding: 20px; display: flex; gap: 15px;
+            border-top: 1px solid #222; background: var(--bg);
         }
-        .page::-webkit-scrollbar { display: none; }
-        .page.active { opacity: 1; transform: scale(1); pointer-events: all; z-index: 10; }
+        .big-btn {
+            flex: 1; padding: 15px; border-radius: 12px; border: none; font-weight: bold; font-size: 1rem; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-blue { background: var(--accent); color: black; }
+        .btn-dark { background: var(--card-light); color: white; border: 1px solid #333; }
 
-        /* --- COMPONENT: STORIES (Horizontal Scroll) --- */
-        .stories-rail {
-            display: flex; gap: 15px; padding: 20px; overflow-x: auto;
-            scroll-behavior: smooth; white-space: nowrap;
+        /* BOTTOM NAV */
+        .navbar {
+            position: fixed; bottom: 0; width: 100%; height: 85px;
+            background: rgba(0,0,0,0.95); border-top: 1px solid #222;
+            display: flex; justify-content: space-around; padding-top: 15px;
+            z-index: 100; padding-bottom: 20px;
         }
-        .story-bubble {
+        .nav-item {
             display: flex; flex-direction: column; align-items: center; gap: 5px;
-            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            color: var(--text-dim); text-decoration: none; font-size: 0.7rem; cursor: pointer;
         }
-        .story-ring {
-            width: 65px; height: 65px; border-radius: 50%; padding: 3px;
-            background: linear-gradient(45deg, var(--neon-blue), var(--neon-purple));
-            position: relative;
-        }
-        .story-img {
-            width: 100%; height: 100%; border-radius: 50%; object-fit: cover;
-            border: 3px solid black; background: #111;
-        }
-        .story-user { font-size: 0.75rem; font-weight: 500; }
-        
-        /* --- COMPONENT: POST CARD (Glass) --- */
-        .post-card {
-            background: var(--glass-panel); border: 1px solid var(--glass-border);
-            margin: 10px 20px 30px 20px; border-radius: 25px; overflow: hidden;
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            transition: transform 0.2s;
-        }
-        .post-card:active { transform: scale(0.98); }
-        
-        .post-header { padding: 15px; display: flex; align-items: center; gap: 10px; }
-        .post-avatar { width: 35px; height: 35px; border-radius: 12px; }
-        .post-media { width: 100%; max-height: 450px; object-fit: cover; background: #050505; }
-        
-        .post-actions { padding: 15px; display: flex; gap: 20px; font-size: 1.6rem; }
-        .icon-btn { color: white; transition: 0.2s; cursor: pointer; }
-        .icon-btn:active { transform: scale(0.8); color: var(--neon-purple); }
-        .liked { color: #ff0055 !important; text-shadow: 0 0 15px #ff0055; }
+        .nav-item i { font-size: 1.5rem; }
+        .nav-item.active { color: var(--accent); }
 
-        /* --- COMPONENT: CHAT --- */
-        .chat-list { padding: 20px; display: flex; flex-direction: column; gap: 12px; }
-        .msg-bubble {
-            padding: 12px 18px; border-radius: 20px; max-width: 75%; font-size: 0.95rem;
-            backdrop-filter: blur(10px); position: relative;
-            animation: slideUp 0.3s ease;
-        }
-        .msg-mine {
-            align-self: flex-end;
-            background: linear-gradient(135deg, rgba(0, 242, 255, 0.2), rgba(189, 0, 255, 0.2));
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-bottom-right-radius: 4px;
-        }
-        .msg-other {
-            align-self: flex-start;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-bottom-left-radius: 4px;
-        }
-
-        /* --- COMPONENT: FLOATING DOCK (Navigation) --- */
-        .dock-container {
-            position: absolute; bottom: 20px; left: 0; width: 100%;
-            display: flex; justify-content: center; z-index: 100;
-        }
-        .dock {
-            background: var(--dock-bg); backdrop-filter: blur(25px);
-            border: 1px solid var(--glass-border);
-            padding: 10px 25px; border-radius: 40px;
-            display: flex; gap: 30px; align-items: center;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-        }
-        .dock-btn {
-            font-size: 1.6rem; color: var(--text-dim); border: none; background: none;
-            transition: 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); cursor: pointer; position: relative;
-        }
-        .dock-btn.active { color: var(--text-main); transform: translateY(-5px); }
-        .dock-btn.active::after {
-            content: ''; position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%);
-            width: 5px; height: 5px; border-radius: 50%; background: var(--neon-blue);
-            box-shadow: 0 0 10px var(--neon-blue);
-        }
-        .dock-add {
-            font-size: 2rem; color: #000; background: var(--text-main);
-            width: 50px; height: 50px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 0 20px rgba(255,255,255,0.3);
-        }
-
-        /* --- MODALS & INPUTS --- */
-        .modal {
+        /* LOGIN */
+        #login-modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.95); z-index: 200; display: none;
-            flex-direction: column; align-items: center; justify-content: center;
-            backdrop-filter: blur(10px);
+            background: #000; z-index: 200; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
         }
-        .login-input {
-            background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
-            padding: 15px 25px; border-radius: 30px; color: white;
-            font-family: inherit; font-size: 1.1rem; text-align: center;
-            outline: none; width: 80%; margin: 10px 0;
-            transition: 0.3s;
+        .login-field {
+            background: var(--card-light); border: 1px solid #333; color: white;
+            padding: 15px; width: 80%; border-radius: 10px; margin-bottom: 10px;
+            outline: none; font-size: 1rem;
         }
-        .login-input:focus { border-color: var(--neon-blue); box-shadow: 0 0 15px rgba(0, 242, 255, 0.2); }
-        
-        .chat-bar {
-            position: fixed; bottom: 90px; width: 90%; left: 5%;
-            background: rgba(20, 20, 20, 0.8); backdrop-filter: blur(15px);
-            padding: 10px; border-radius: 30px; border: 1px solid var(--glass-border);
-            display: flex; gap: 10px; align-items: center; z-index: 50;
-        }
-        .chat-input { flex: 1; background: transparent; border: none; color: white; padding: 10px; outline: none; }
-
-        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
     </style>
 </head>
 <body>
 
-    <div id="login-screen" class="modal" style="display: flex;">
-        <h1 style="font-size: 3rem; margin-bottom: 5px; background: -webkit-linear-gradient(45deg, var(--neon-blue), var(--neon-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">AURA</h1>
-        <p style="opacity: 0.7; margin-bottom: 30px; letter-spacing: 2px;">SOCIAL OS v2.0</p>
-        <input id="uName" class="login-input" placeholder="Identity Name" autocomplete="off">
-        <input id="rName" class="login-input" placeholder="Frequency Channel (Room)" autocomplete="off">
-        <button onclick="bootSystem()" class="login-input" style="background: white; color: black; font-weight: bold; width: 60%; margin-top: 20px;">INITIALIZE</button>
+    <div id="login-modal">
+        <h1 style="font-size: 2rem; margin-bottom: 30px;">NEXUS OS</h1>
+        <input id="username" class="login-field" placeholder="Username" autocomplete="off">
+        <button onclick="login()" class="big-btn btn-blue" style="width: 80%; flex: none;">Enter System</button>
     </div>
 
-    <div class="app-view">
-        
-        <div id="page-feed" class="page active">
-            <div class="stories-rail" id="stories-rail">
-                <div class="story-bubble" onclick="openUpload('story')">
-                    <div class="story-ring" style="border: 2px dashed rgba(255,255,255,0.3); background:none; padding: 0; display:flex; align-items:center; justify-content:center;">
-                        <i class="ri-add-line" style="font-size:1.5rem;"></i>
-                    </div>
-                    <span class="story-user">Add</span>
-                </div>
+    <div class="view-stack">
+
+        <div id="view-explore" class="view active">
+            <div class="header">
+                <h1>Discover Posts</h1>
+                <button class="add-btn" onclick="document.getElementById('fileInput').click()"><i class="ri-add-line"></i></button>
             </div>
-            
             <div id="feed-container"></div>
         </div>
 
-        <div id="page-chat" class="page">
-            <div style="padding: 20px; display:flex; justify-content:space-between; align-items:center;">
-                <span style="font-size: 1.5rem; font-weight: bold;" id="chat-title">Signal</span>
-                <i class="ri-settings-4-line" style="font-size: 1.2rem; opacity: 0.5;"></i>
+        <div id="view-messages" class="view">
+            <div class="header"><h1>Chats</h1> <button class="add-btn"><i class="ri-add-line"></i></button></div>
+            <input placeholder="Search" style="width:90%; margin:10px 5%; padding:12px; background:#1E1E1E; border:none; border-radius:10px; color:white;">
+            <div id="chat-list-container">
+                <div class="list-item" onclick="openChat('General')">
+                    <img src="https://api.dicebear.com/7.x/initials/svg?seed=General" class="avatar">
+                    <div class="list-info">
+                        <h3>General Chat</h3>
+                        <p class="active-status" style="color:var(--accent)">Active Now</p>
+                    </div>
+                    <i class="ri-arrow-right-s-line arrow"></i>
+                </div>
             </div>
-            <div class="chat-list" id="chat-list"></div>
-            
-            <form class="chat-bar" onsubmit="event.preventDefault(); sendMsg();">
-                <i class="ri-add-circle-fill" style="font-size: 1.5rem; opacity: 0.7;"></i>
-                <input id="msgInput" class="chat-input" placeholder="Type a message..." autocomplete="off">
-                <button type="submit" style="background:none; border:none; color:var(--neon-blue); font-size:1.2rem;"><i class="ri-send-plane-fill"></i></button>
-            </form>
+        </div>
+
+        <div id="view-chat-room" class="view" style="z-index: 20;">
+            <div class="chat-room">
+                <div class="header">
+                    <i class="ri-arrow-left-line" style="font-size:1.5rem;" onclick="closeChat()"></i>
+                    <h3 id="room-name-display">Chat</h3>
+                    <i class="ri-more-2-fill"></i>
+                </div>
+                
+                <div class="chat-profile">
+                    <img id="chat-avatar" src="">
+                    <h2 id="chat-user-display" style="margin:10px 0 5px 0;">User</h2>
+                    <span style="color:#666">private</span>
+                    <div class="action-row">
+                        <button class="action-btn"><i class="ri-phone-line"></i> Call</button>
+                        <button class="action-btn"><i class="ri-vidicon-line"></i> Video</button>
+                        <button class="action-btn"><i class="ri-information-line"></i> Info</button>
+                    </div>
+                </div>
+
+                <div class="header" style="background:transparent; padding-bottom:5px;"><h3>Messages</h3></div>
+                
+                <div id="msg-container" class="messages-area"></div>
+                
+                <div class="chat-input-bar">
+                    <button class="big-btn btn-blue" onclick="sendMsg()"><i class="ri-send-plane-fill"></i> Send</button>
+                    <button class="big-btn btn-dark"><i class="ri-attachment-line"></i> Attach</button>
+                    <input id="msg-input" style="display:none;"> </div>
+            </div>
+        </div>
+
+        <div id="view-profile" class="view">
+            <div class="header">
+                <i class="ri-arrow-left-line"></i>
+                <h3 id="profile-name">My Profile</h3>
+                <i class="ri-more-fill"></i>
+            </div>
+            <div style="text-align: center; margin-top: 10px;">
+                <img id="my-avatar" src="" class="avatar" style="width:100px; height:100px; border:none;">
+                <h2 id="my-username" style="margin:10px 0 5px 0;">User</h2>
+                
+                <div class="action-row" style="padding: 0 20px;">
+                    <button class="action-btn">Edit Profile</button>
+                    <button class="action-btn">Settings</button>
+                    <button class="action-btn">Share</button>
+                </div>
+            </div>
+
+            <div class="analytics-grid">
+                <h3>Account Analytics</h3>
+                <div class="stat-card">
+                    <div class="stat-label">Profile Views</div>
+                    <div class="stat-value" id="stat-views">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Followers</div>
+                    <div class="stat-value" id="stat-followers">0</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-comments" class="view">
+            <div class="header"><h1>Comments</h1> <button class="add-btn"><i class="ri-add-line"></i></button></div>
+            <div id="comments-list">
+                <div class="list-item" style="align-items:flex-start;">
+                    <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Ethan" class="avatar">
+                    <div class="list-info">
+                        <span style="color:var(--accent); font-size:0.8rem; font-weight:bold;">JANUARY 9, 2026</span>
+                        <h3>Ethan Williams</h3>
+                        <p style="color:white; margin-top:5px;">Check out this new meme I found! Can't help but think it's relatable.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-followers" class="view">
+            <div class="header"><h1>Followers</h1> <button class="add-btn"><i class="ri-add-line"></i></button></div>
+            <div class="list-item">
+                <div class="list-info">
+                    <span style="color:var(--accent); font-size:0.7rem; font-weight:bold;">NEW REQUEST</span>
+                    <h3>NexuVerse</h3>
+                    <p>Sarah Jones</p>
+                </div>
+                <i class="ri-arrow-right-s-line arrow"></i>
+            </div>
         </div>
 
     </div>
 
-    <div class="dock-container">
-        <div class="dock">
-            <button class="dock-btn active" onclick="nav('feed')"><i class="ri-home-line"></i></button>
-            <button class="dock-btn dock-add" onclick="openUpload('post')"><i class="ri-add-line"></i></button>
-            <button class="dock-btn" onclick="nav('chat')"><i class="ri-message-3-line"></i></button>
+    <div class="navbar">
+        <div class="nav-item active" onclick="nav('explore')">
+            <i class="ri-earth-line"></i> Explore
+        </div>
+        <div class="nav-item" onclick="nav('messages')">
+            <i class="ri-chat-3-line"></i> Messaging
+        </div>
+        <div class="nav-item" onclick="nav('profile')">
+            <i class="ri-user-line"></i> Profile
+        </div>
+        <div class="nav-item" onclick="nav('comments')">
+            <i class="ri-discuss-line"></i> Comments
+        </div>
+        <div class="nav-item" onclick="nav('followers')">
+            <i class="ri-group-line"></i> Followers
         </div>
     </div>
 
-    <div id="upload-modal" class="modal">
-        <div style="background: #111; padding: 30px; border-radius: 30px; width: 90%; border: 1px solid #333; text-align: center;">
-            <h2 id="upload-type" style="margin-top:0;">New Post</h2>
-            <input type="file" id="fileInput" accept="image/*" style="display:none" onchange="previewFile()">
-            <div onclick="document.getElementById('fileInput').click()" style="height: 200px; border: 2px dashed #444; border-radius: 20px; display:flex; align-items:center; justify-content:center; margin-bottom: 20px; overflow:hidden;">
-                <img id="preview-img" style="width:100%; height:100%; object-fit:cover; display:none;">
-                <span id="preview-text" style="color:#666">Tap to upload</span>
-            </div>
-            <input id="caption" class="login-input" placeholder="Caption..." style="width:100%; background:#222; text-align:left;">
-            <div style="display:flex; gap:10px; margin-top:20px;">
-                <button onclick="document.getElementById('upload-modal').style.display='none'" class="login-input" style="background: #333; flex:1;">Cancel</button>
-                <button onclick="commitUpload()" class="login-input" style="background: white; color:black; font-weight:bold; flex:1;">Post</button>
-            </div>
-        </div>
-    </div>
+    <input type="file" id="fileInput" style="display:none;" onchange="uploadFile()">
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io();
-        let myName = localStorage.getItem("user") || "";
-        let myRoom = localStorage.getItem("room") || "";
-        let currentUploadType = 'post';
-        let fileData = null;
+        let myUser = null;
+        let currentRoom = "";
 
-        if(myName && myRoom) {
-            document.getElementById("uName").value = myName;
-            document.getElementById("rName").value = myRoom;
-        }
-
-        function bootSystem() {
-            myName = document.getElementById("uName").value;
-            myRoom = document.getElementById("rName").value;
-            if(myName && myRoom) {
-                localStorage.setItem("user", myName);
-                localStorage.setItem("room", myRoom);
-                document.getElementById("login-screen").style.display = "none";
-                document.getElementById("chat-title").innerText = myRoom;
-                socket.emit('join system', { user: myName, room: myRoom });
+        // LOGIN
+        function login() {
+            const username = document.getElementById('username').value;
+            if (username) {
+                socket.emit('login', username);
+                document.getElementById('login-modal').style.display = 'none';
+                localStorage.setItem('nexusUser', username);
             }
         }
 
-        function nav(page) {
-            document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.dock-btn').forEach(el => el.classList.remove('active'));
+        // NAVIGATOR
+        function nav(viewName) {
+            document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             
-            if(page === 'feed') {
-                document.getElementById('page-feed').classList.add('active');
-                document.querySelectorAll('.dock-btn')[0].classList.add('active');
-            } else {
-                document.getElementById('page-chat').classList.add('active');
-                document.querySelectorAll('.dock-btn')[2].classList.add('active');
+            // Map clicks to views
+            const viewMap = {
+                'explore': 'view-explore',
+                'messages': 'view-messages',
+                'profile': 'view-profile',
+                'comments': 'view-comments',
+                'followers': 'view-followers'
+            };
+
+            document.getElementById(viewMap[viewName]).classList.add('active');
+            
+            // Update Icon Color (simple logic)
+            const iconMap = ['explore', 'messages', 'profile', 'comments', 'followers'];
+            document.querySelectorAll('.nav-item')[iconMap.indexOf(viewName)].classList.add('active');
+        }
+
+        // CHAT LOGIC
+        function openChat(roomName) {
+            currentRoom = roomName;
+            document.getElementById('view-chat-room').classList.add('active');
+            document.getElementById('room-name-display').innerText = roomName;
+            document.getElementById('chat-user-display').innerText = roomName;
+            document.getElementById('chat-avatar').src = `https://api.dicebear.com/7.x/initials/svg?seed=${roomName}`;
+            
+            socket.emit('join chat', roomName);
+        }
+
+        function closeChat() {
+            document.getElementById('view-chat-room').classList.remove('active');
+        }
+
+        function sendMsg() {
+            const text = prompt("Type Message:"); // Using prompt to match the specific UI logic where input wasn't standard
+            if (text && myUser) {
+                socket.emit('chat message', {
+                    user: myUser.username,
+                    room: currentRoom,
+                    type: 'text',
+                    content: text,
+                    avatar: myUser.avatar
+                });
             }
         }
 
-        // --- UPLOAD LOGIC ---
-        function openUpload(type) {
-            currentUploadType = type;
-            document.getElementById('upload-type').innerText = type === 'story' ? 'New Story' : 'New Post';
-            document.getElementById('upload-modal').style.display = 'flex';
-            fileData = null;
-            document.getElementById('preview-img').style.display = 'none';
-            document.getElementById('preview-text').style.display = 'block';
+        // SOCKET HANDLERS
+        socket.on('user data', (user) => {
+            myUser = user;
+            // Update Profile Page
+            document.getElementById('profile-name').innerText = user.username;
+            document.getElementById('my-username').innerText = user.username;
+            document.getElementById('my-avatar').src = user.avatar;
+            document.getElementById('stat-followers').innerText = user.followers;
+            document.getElementById('stat-views').innerText = user.profileViews;
+        });
+
+        socket.on('load feed', (posts) => {
+            const container = document.getElementById('feed-container');
+            container.innerHTML = "";
+            posts.forEach(post => {
+                const card = document.createElement('div');
+                card.className = 'feed-card';
+                card.innerHTML = `
+                    <img src="${post.content}" class="feed-img">
+                    <div class="feed-overlay">
+                        <span class="tag">EVENT • TODAY</span>
+                        <h3 style="margin:0; font-size:1.1rem;">${post.caption}</h3>
+                        <div style="font-size:0.8rem; opacity:0.7; margin-top:5px;">${post.user}</div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        });
+
+        socket.on('load chat', (msgs) => {
+            document.getElementById('msg-container').innerHTML = "";
+            msgs.forEach(renderMsg);
+        });
+        socket.on('chat message', renderMsg);
+
+        function renderMsg(msg) {
+            const div = document.createElement('div');
+            div.className = `msg ${msg.user === myUser.username ? 'msg-me' : 'msg-other'}`;
+            div.innerText = msg.content;
+            const container = document.getElementById('msg-container');
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
         }
 
-        function previewFile() {
+        // UPLOAD
+        function uploadFile() {
             const file = document.getElementById('fileInput').files[0];
             const reader = new FileReader();
-            reader.onload = e => {
-                fileData = e.target.result;
-                document.getElementById('preview-img').src = fileData;
-                document.getElementById('preview-img').style.display = 'block';
-                document.getElementById('preview-text').style.display = 'none';
+            reader.onload = function(e) {
+                const caption = prompt("Write a caption:");
+                socket.emit('create post', {
+                    user: myUser.username,
+                    type: 'image',
+                    content: e.target.result,
+                    caption: caption || "New Post",
+                    avatar: myUser.avatar
+                });
             };
             reader.readAsDataURL(file);
         }
 
-        function commitUpload() {
-            if(!fileData) return;
-            const caption = document.getElementById('caption').value;
-            
-            if(currentUploadType === 'post') {
-                socket.emit('create post', { user: myName, type: 'image', content: fileData, caption });
-            } else {
-                socket.emit('create story', { user: myName, type: 'image', content: fileData });
-            }
-            document.getElementById('upload-modal').style.display = 'none';
-        }
-
-        function sendMsg() {
-            const input = document.getElementById('msgInput');
-            if(input.value) {
-                socket.emit('chat message', { user: myName, room: myRoom, type: 'text', content: input.value });
-                input.value = '';
-            }
-        }
-
-        // --- SOCKET LISTENERS ---
-        socket.on('init data', ({ msgs, posts, stories }) => {
-            document.getElementById('chat-list').innerHTML = '';
-            document.getElementById('feed-container').innerHTML = '';
-            // Clear stories except "Add" button
-            const rail = document.getElementById('stories-rail');
-            while(rail.children.length > 1) rail.removeChild(rail.lastChild);
-
-            msgs.forEach(renderMsg);
-            posts.forEach(renderPost);
-            stories.forEach(renderStory);
-        });
-
-        socket.on('chat message', renderMsg);
-        socket.on('new post', (p) => { 
-            const feed = document.getElementById('feed-container');
-            feed.insertBefore(createPostEl(p), feed.firstChild);
-        });
-        socket.on('new story', renderStory);
-        socket.on('update post', (p) => {
-            const old = document.getElementById(`post-${p._id}`);
-            if(old) old.outerHTML = createPostEl(p).outerHTML;
-        });
-
-        // --- RENDERERS ---
-        function renderMsg(msg) {
-            const div = document.createElement('div');
-            div.className = `msg-bubble ${msg.user === myName ? 'msg-mine' : 'msg-other'}`;
-            div.innerText = msg.content;
-            const list = document.getElementById('chat-list');
-            list.appendChild(div);
-            list.scrollTop = list.scrollHeight;
-        }
-
-        function renderStory(s) {
-            const div = document.createElement('div');
-            div.className = 'story-bubble';
-            div.innerHTML = `
-                <div class="story-ring">
-                    <img src="${s.content}" class="story-img">
-                </div>
-                <span class="story-user">${s.user}</span>
-            `;
-            document.getElementById('stories-rail').appendChild(div);
-        }
-
-        function renderPost(p) {
-            document.getElementById('feed-container').appendChild(createPostEl(p));
-        }
-
-        function createPostEl(p) {
-            const div = document.createElement('div');
-            div.className = 'post-card';
-            div.id = `post-${p._id}`;
-            const isLiked = p.likes.includes(myName);
-            
-            div.innerHTML = `
-                <div class="post-header">
-                    <img src="${p.avatar}" class="post-avatar">
-                    <span style="font-weight:600">${p.user}</span>
-                </div>
-                <img src="${p.content}" class="post-media" loading="lazy">
-                <div class="post-actions">
-                    <i class="${isLiked ? 'ri-heart-3-fill liked' : 'ri-heart-3-line'} icon-btn" onclick="socket.emit('like post', {id:'${p._id}', user:'${myName}'})"></i>
-                    <i class="ri-chat-3-line icon-btn"></i>
-                    <i class="ri-share-forward-line icon-btn" style="margin-left:auto"></i>
-                </div>
-                <div style="padding: 0 15px 15px 15px; opacity: 0.8; font-size: 0.9rem;">
-                    <strong>${p.likes.length} Likes</strong><br>
-                    <span>${p.caption}</span>
-                </div>
-            `;
-            return div;
+        // Auto-login check
+        const savedUser = localStorage.getItem('nexusUser');
+        if(savedUser) {
+            document.getElementById('username').value = savedUser;
+            login();
         }
     </script>
 </body>
