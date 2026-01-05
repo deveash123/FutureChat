@@ -3,44 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>FutureChat Premium</title>
+    <title>FutureChat Groups</title>
     
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
     <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/724/724715.png">
-
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
-    
     <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 
     <style>
-        /* --- VISUAL THEME --- */
-        :root {
-            --primary: #007AFF; --bg: #F2F2F7; --header-bg: rgba(255,255,255,0.85);
-            --text-main: #000; --bubble-self: #007AFF; --bubble-other: #E9E9EB;
-        }
-        @media (prefers-color-scheme: dark) {
-            :root {
-                --primary: #0A84FF; --bg: #000; --header-bg: rgba(20,20,20,0.85);
-                --text-main: #FFF; --bubble-self: #0A84FF; --bubble-other: #1C1C1E;
-            }
-        }
+        :root { --primary: #007AFF; --bg: #F2F2F7; --header-bg: rgba(255,255,255,0.85); --text-main: #000; --bubble-self: #007AFF; --bubble-other: #E9E9EB; }
+        @media (prefers-color-scheme: dark) { :root { --primary: #0A84FF; --bg: #000; --header-bg: rgba(20,20,20,0.85); --text-main: #FFF; --bubble-self: #0A84FF; --bubble-other: #1C1C1E; } }
 
         body { margin: 0; background: var(--bg); color: var(--text-main); font-family: 'Inter', sans-serif; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
-
-        /* --- HEADER --- */
-        header {
-            background: var(--header-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;
-            border-bottom: 1px solid rgba(128,128,128,0.2); z-index: 100;
-        }
+        
+        /* HEADER */
+        header { background: var(--header-bg); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(128,128,128,0.2); z-index: 100; }
         .brand { font-weight: 600; font-size: 1.2rem; }
+        .group-badge { font-size: 0.7rem; background: var(--primary); color: white; padding: 2px 8px; border-radius: 10px; margin-left: 5px; vertical-align: middle; }
         .header-actions { display: flex; gap: 15px; }
         .action-btn { background: none; border: none; font-size: 1.4rem; color: var(--primary); cursor: pointer; }
 
-        /* --- CHAT LIST --- */
+        /* CHAT */
         #messages { list-style: none; padding: 20px; padding-bottom: 120px; margin: 0; flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
         li { padding: 10px 16px; border-radius: 18px; max-width: 80%; font-size: 0.95rem; word-wrap: break-word; }
         .my-message { align-self: flex-end; background: var(--bubble-self); color: white; border-bottom-right-radius: 4px; }
@@ -48,64 +34,38 @@
         .chat-image { max-width: 100%; border-radius: 10px; margin-top: 5px; }
         .msg-name { font-size: 0.7rem; font-weight: bold; margin-bottom: 4px; opacity: 0.7; }
 
-        /* --- INPUT --- */
+        /* INPUT */
         form { position: fixed; bottom: 0; width: 100%; background: var(--header-bg); padding: 10px 15px; display: flex; gap: 10px; padding-bottom: max(10px, env(safe-area-inset-bottom)); box-sizing: border-box; }
         input { flex-grow: 1; border: none; background: rgba(128,128,128,0.1); padding: 10px 20px; border-radius: 25px; color: var(--text-main); outline: none; font-size: 1rem; }
         .btn-icon { background: none; border: none; color: var(--primary); font-size: 1.4rem; }
         
-        /* --- VIDEO CALL OVERLAY --- */
-        #video-modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; z-index: 9999; display: none; flex-direction: column;
-        }
+        /* LOGIN & GROUPS */
+        #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .login-input { padding: 15px; border-radius: 12px; border: 1px solid #ccc; width: 250px; text-align: center; font-size: 1rem; margin-bottom: 10px; background: rgba(128,128,128,0.1); color: var(--text-main); }
+        .login-btn { background: var(--primary); color: white; padding: 12px 40px; border-radius: 30px; border: none; font-size: 1rem; font-weight: bold; margin-top: 10px; cursor: pointer; }
+        
+        /* CALL OVERLAYS (Hidden by default) */
+        #video-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 9999; display: none; flex-direction: column; }
         #remote-video { width: 100%; height: 100%; object-fit: cover; }
-        #local-video { 
-            position: absolute; bottom: 100px; right: 20px; 
-            width: 120px; height: 160px; background: #333; 
-            border-radius: 15px; border: 2px solid white; object-fit: cover; 
-            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-        }
-        .call-controls {
-            position: absolute; bottom: 30px; width: 100%; 
-            display: flex; justify-content: center; gap: 30px;
-        }
-        .hangup-btn {
-            width: 60px; height: 60px; border-radius: 50%; 
-            background: #FF3B30; color: white; border: none; 
-            font-size: 1.5rem; display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 5px 15px rgba(255, 59, 48, 0.4); cursor: pointer;
-        }
-
-        /* --- INCOMING CALL POPUP --- */
-        #incoming-call {
-            position: fixed; top: 20px; left: 5%; width: 90%; 
-            background: rgba(25, 25, 25, 0.95); backdrop-filter: blur(10px);
-            padding: 20px; border-radius: 20px; z-index: 10000;
-            display: none; align-items: center; justify-content: space-between;
-            color: white; box-shadow: 0 10px 40px rgba(0,0,0,0.5); border: 1px solid #333;
-        }
+        #local-video { position: absolute; bottom: 100px; right: 20px; width: 120px; height: 160px; background: #333; border-radius: 15px; border: 2px solid white; object-fit: cover; }
+        .hangup-btn { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); width: 60px; height: 60px; border-radius: 50%; background: #FF3B30; color: white; border: none; font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center;}
+        
+        #incoming-call { position: fixed; top: 20px; left: 5%; width: 90%; background: rgba(25, 25, 25, 0.95); padding: 20px; border-radius: 20px; z-index: 10000; display: none; align-items: center; justify-content: space-between; color: white; }
         .answer-btn { background: #30D158; padding: 10px 20px; border-radius: 20px; border: none; color: white; font-weight: bold; }
         .reject-btn { background: #FF3B30; padding: 10px 20px; border-radius: 20px; border: none; color: white; font-weight: bold; }
-
-        /* --- LOGIN --- */
-        #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg); z-index: 5000; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .login-input { padding: 15px; border-radius: 12px; border: 1px solid #ccc; width: 250px; text-align: center; font-size: 1rem; margin-bottom: 20px; }
-        .login-btn { background: var(--primary); color: white; padding: 12px 40px; border-radius: 30px; border: none; font-size: 1rem; font-weight: bold; }
     </style>
 </head>
 <body>
 
     <div id="login-screen">
-        <h1 style="margin-bottom: 30px;">Chat Login</h1>
-        <input type="text" id="username-input" class="login-input" placeholder="Enter Name (e.g. Harish)" autocomplete="off">
-        <button class="login-btn" onclick="joinChat()">Start</button>
+        <h1 style="margin-bottom: 20px;">Join Chat</h1>
+        <input type="text" id="username-input" class="login-input" placeholder="Your Name" autocomplete="off">
+        <input type="text" id="room-input" class="login-input" placeholder="Room Name (e.g. Love)" autocomplete="off">
+        <button class="login-btn" onclick="joinChat()">Enter Room</button>
     </div>
 
     <div id="incoming-call">
-        <div>
-            <div style="font-size: 0.8rem; opacity: 0.7;">INCOMING VIDEO CALL</div>
-            <div style="font-size: 1.2rem; font-weight: bold;" id="caller-name">...</div>
-        </div>
+        <div id="caller-name" style="font-weight:bold;">...</div>
         <div style="display: flex; gap: 10px;">
             <button class="reject-btn" onclick="rejectCall()">Decline</button>
             <button class="answer-btn" onclick="answerCall()">Answer</button>
@@ -115,21 +75,17 @@
     <div id="video-modal">
         <video id="remote-video" autoplay playsinline></video>
         <video id="local-video" autoplay playsinline muted></video>
-        <div class="call-controls">
-            <button class="hangup-btn" onclick="endCall()"><i class="ri-phone-end-fill"></i></button>
-        </div>
+        <button class="hangup-btn" onclick="endCall()"><i class="ri-phone-end-fill"></i></button>
     </div>
 
     <header>
-        <div class="brand">Chat</div>
+        <div class="brand">Chat <span class="group-badge" id="display-room">...</span></div>
         <div class="header-actions">
             <button class="action-btn" onclick="startCall()"><i class="ri-vidicon-fill"></i></button>
-            <div style="font-size:0.9rem; align-self:center; font-weight:bold;" id="display-name">...</div>
         </div>
     </header>
 
     <ul id="messages"></ul>
-
     <input type="file" id="fileInput" accept="image/*" style="display: none;">
     
     <form id="form" action="">
@@ -143,95 +99,74 @@
     <script>
         var socket = io();
         var myName = localStorage.getItem("chatName") || "";
-        var peer = null; // The Video Connection Object
-        var currentCall = null;
-        var localStream = null;
+        var myRoom = localStorage.getItem("chatRoom") || ""; 
+        var peer = null; var currentCall = null; var localStream = null;
 
-        if (myName) initApp();
+        // Auto-login if data exists
+        if (myName && myRoom) {
+            document.getElementById("username-input").value = myName;
+            document.getElementById("room-input").value = myRoom;
+            // joinChat(); // Optional: Auto join, but safer to let user confirm room
+        }
 
         function joinChat() {
-            var val = document.getElementById("username-input").value.trim();
-            if (val) {
-                myName = val;
+            var uVal = document.getElementById("username-input").value.trim();
+            var rVal = document.getElementById("room-input").value.trim();
+            
+            if (uVal && rVal) {
+                myName = uVal;
+                myRoom = rVal;
                 localStorage.setItem("chatName", myName);
-                initApp();
+                localStorage.setItem("chatRoom", myRoom);
+                
+                document.getElementById("login-screen").style.display = "none";
+                document.getElementById("display-room").innerText = myRoom;
+                
+                // TELL SERVER TO JOIN ROOM
+                socket.emit('join room', myRoom);
+                
+                initPeer();
             }
         }
 
-        function initApp() {
-            document.getElementById("login-screen").style.display = "none";
-            document.getElementById("display-name").innerText = myName;
-            
-            // INITIALIZE PEER (Video ID = Username)
-            // We use a random suffix to avoid collisions if name is common
-            // In a real app, you'd use User IDs. Here we hack it with the Name.
-            peer = new Peer(myName + "-chat-app-user"); 
-
-            peer.on('open', (id) => {
-                console.log('My Peer ID is: ' + id);
-            });
-
-            // HANDLE INCOMING CALLS
+        function initPeer() {
+            // Unique ID: Name + Room (so Video calls work inside rooms)
+            peer = new Peer(myName + "-" + myRoom); 
             peer.on('call', (call) => {
-                // Show Popup
                 document.getElementById('incoming-call').style.display = 'flex';
-                document.getElementById('caller-name').innerText = call.peer.replace("-chat-app-user", "");
-                
-                // Save the call object so we can answer it later
+                document.getElementById('caller-name').innerText = "Incoming Call";
                 currentCall = call;
             });
         }
 
-        // --- CALL FUNCTIONS ---
+        // --- CALLS ---
         function startCall() {
-            var personToCall = prompt("Who do you want to call? (Enter exact name)");
-            if(!personToCall) return;
-
+            var person = prompt("Enter name to call (in this room):");
+            if(!person) return;
             navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then((stream) => {
                 localStream = stream;
                 document.getElementById('video-modal').style.display = 'flex';
                 document.getElementById('local-video').srcObject = stream;
-
-                // Call the other person
-                var call = peer.call(personToCall + "-chat-app-user", stream);
+                var call = peer.call(person + "-" + myRoom, stream);
                 currentCall = call;
-
-                call.on('stream', (remoteStream) => {
-                    document.getElementById('remote-video').srcObject = remoteStream;
-                });
-            }).catch(err => alert("Camera permission denied"));
+                call.on('stream', (remoteStream) => { document.getElementById('remote-video').srcObject = remoteStream; });
+            }).catch(err => alert("Camera blocked"));
         }
 
         function answerCall() {
             document.getElementById('incoming-call').style.display = 'none';
-            
             navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then((stream) => {
                 localStream = stream;
                 document.getElementById('video-modal').style.display = 'flex';
                 document.getElementById('local-video').srcObject = stream;
-
-                // Answer the call with our video
                 currentCall.answer(stream);
-
-                currentCall.on('stream', (remoteStream) => {
-                    document.getElementById('remote-video').srcObject = remoteStream;
-                });
+                currentCall.on('stream', (rs) => { document.getElementById('remote-video').srcObject = rs; });
             });
         }
+        function endCall() { window.location.reload(); }
+        function rejectCall() { document.getElementById('incoming-call').style.display = 'none'; }
 
-        function rejectCall() {
-            document.getElementById('incoming-call').style.display = 'none';
-            if(currentCall) currentCall.close();
-        }
-
-        function endCall() {
-            if(currentCall) currentCall.close();
-            if(localStream) localStream.getTracks().forEach(track => track.stop());
-            document.getElementById('video-modal').style.display = 'none';
-            window.location.reload(); // Simple reset
-        }
-
-        // --- CHAT LOGIC (Same as before) ---
+        // --- MESSAGES ---
         var form = document.getElementById('form');
         var input = document.getElementById('input');
         var messages = document.getElementById('messages');
@@ -239,8 +174,8 @@
 
         form.addEventListener('submit', function(e) {
             e.preventDefault();
-            if (input.value && myName) {
-                var msgData = { user: myName, type: 'text', content: input.value };
+            if (input.value && myName && myRoom) {
+                var msgData = { user: myName, room: myRoom, type: 'text', content: input.value };
                 socket.emit('chat message', JSON.stringify(msgData));
                 input.value = '';
             }
@@ -248,19 +183,17 @@
 
         fileInput.addEventListener('change', function() {
             const file = this.files[0];
-            if (file && myName) {
+            if (file) {
                 const reader = new FileReader();
                 reader.onload = function(evt) {
                     const img = new Image();
                     img.onload = function() {
                         const canvas = document.createElement('canvas');
                         const ctx = canvas.getContext('2d');
-                        const MAX_WIDTH = 500;
-                        const scaleFactor = MAX_WIDTH / img.width;
-                        canvas.width = MAX_WIDTH;
-                        canvas.height = img.height * scaleFactor;
+                        const scaleFactor = 500 / img.width;
+                        canvas.width = 500; canvas.height = img.height * scaleFactor;
                         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        var msgData = { user: myName, type: 'image', content: canvas.toDataURL('image/jpeg', 0.6) };
+                        var msgData = { user: myName, room: myRoom, type: 'image', content: canvas.toDataURL('image/jpeg', 0.6) };
                         socket.emit('chat message', JSON.stringify(msgData));
                     }
                     img.src = evt.target.result;
@@ -271,21 +204,14 @@
         });
 
         socket.on('chat message', function(msg) {
-            var data;
-            try { data = JSON.parse(msg); } catch(e) { return; }
+            var data; try { data = JSON.parse(msg); } catch(e) { return; }
             var item = document.createElement('li');
             item.classList.add(data.user === myName ? "my-message" : "other-message");
-            
-            let contentHtml = "";
-            if (data.type === 'image') contentHtml = `<img src="${data.content}" class="chat-image" />`;
-            else contentHtml = data.content;
-
-            if(data.user !== myName) item.innerHTML = `<div class="msg-name">${data.user}</div> ${contentHtml}`;
-            else item.innerHTML = contentHtml;
-
+            let content = data.type === 'image' ? `<img src="${data.content}" class="chat-image"/>` : data.content;
+            if(data.user !== myName) item.innerHTML = `<div class="msg-name">${data.user}</div> ${content}`;
+            else item.innerHTML = content;
             messages.appendChild(item);
             window.scrollTo(0, document.body.scrollHeight);
-            messages.scrollTop = messages.scrollHeight;
         });
     </script>
 </body>
